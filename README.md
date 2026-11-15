@@ -13,7 +13,7 @@ Milk is a single-repository platform for a dairy fleet with three separately ins
 - Android: Kotlin, Jetpack Compose, MVVM, repositories, coroutines and Flow.
 - Backend: Node.js, TypeScript and Express as a modular monolith.
 - Data: PostgreSQL + PostGIS.
-- Realtime: Socket.IO with server-authorized rooms.
+- Realtime: authenticated WebSocket (WSS) with server-authorized subscriptions.
 - Maps: MapLibre Native Android + regional PMTiles offline vector map; routing: private Valhalla graph built from buffered OpenStreetMap data.
 - Notifications: Firebase Cloud Messaging.
 - Offline: Room on Android; durable retry queues and idempotent server writes.
@@ -23,6 +23,7 @@ Milk is a single-repository platform for a dairy fleet with three separately ins
 1. [System architecture](docs/ARCHITECTURE.md)
 2. [20-step implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
 3. [Technology stack research and decisions](docs/TECH_STACK_DECISIONS.md)
+4. [AI-assisted two-phase research/build pipeline](docs/AI_DEVELOPMENT_PIPELINE.md)
 
 ## Core product rules
 
