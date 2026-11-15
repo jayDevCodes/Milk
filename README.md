@@ -22,6 +22,7 @@ Milk is a single-repository platform for a dairy fleet with three separately ins
 
 1. [System architecture](docs/ARCHITECTURE.md)
 2. [20-step implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
+3. [Technology stack research and decisions](docs/TECH_STACK_DECISIONS.md)
 
 ## Core product rules
 
