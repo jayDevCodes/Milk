@@ -1,0 +1,11 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.pdf binary
+*.apk binary
+*.aab binary
+*.pbf binary
+*.pmtiles binary
+*.mbtiles binary

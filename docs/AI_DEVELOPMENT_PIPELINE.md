@@ -1,24 +1,24 @@
-# Milk — AI-Assisted 20-Step Research → Build Pipeline
+# Milk — Autonomous 20-Step Research → Build Pipeline
 
-**Purpose:** Make development repeatable. The project owner should not need to repeat the same instructions before every milestone.  
+**Purpose:** Repeatable development without asking the owner to restate prompts or approve a separate Build phase.  
 **Repository:** jayDevCodes/Milk  
 **Master scope:** docs/IMPLEMENTATION_ROADMAP.md  
-**Research rule:** Every roadmap step passes a dedicated Research gate before any implementation begins.  
-**Build rule:** Implementation starts only after the owner says "Build" for the researched step.
+**Canonical progress:** docs/PIPELINE_STATE.md  
+**Default mode:** Research first, then automatically Build, Verify and Commit the same step.
 
 ## 1. The default interaction contract
 
-The owner may use only these short commands:
+- **Continue / Next / Aage badho** — inspect the live repository, find the first incomplete roadmap step, Research it, save findings, then immediately Build and Verify that step. Commit changes and update the state file.
+- **Status** — inspect GitHub and report evidence-backed completed, partial, blocked and next steps. Do not modify product code.
+- **Research step N** — research only that requested step and save its research record.
+- **Build step N** — inspect current research; if missing or stale, Research first, then Build automatically.
+- **Pause** — stop safely after the current milestone without claiming incomplete work is finished.
 
-- **Next step** — inspect the real repository and research the first incomplete roadmap step. Do not implement app/backend code. Deliver findings and a ready-to-run build brief for the next turn.
-- **Build** — implement the exact step that was most recently researched and whose build brief is still current. Do not ask the owner to repeat the brief.
-- **Status** — inspect the repository and report completed, partial, blocked and next steps, supported by actual files/commits/tests.
-- **Research step N** — research a specific step without implementing it.
-- **Build step N** — build a specifically named step only if its research gate is complete; otherwise perform research first.
+A normal Continue runs one complete Research → Build → Verify → Commit cycle. The next roadmap step begins only when the owner says Continue again. A separate Build message is not required between phases.
 
-If the user says "next", "continue" or "aage badho" without specifying a phase, interpret it as **Next step / Research**, never as permission to begin implementation. If the owner says "Build" after the Research response, use the already prepared build brief.
+Do not ask the owner to repeat information already present in this repository or conversation. Read README, architecture, technology decisions, roadmap, pipeline state, research notes, source code, manifests, tests, workflows and recent commits first.
 
-Do not ask the owner to paste the same requirements again. Read these repository documents and the current code first.
+If blocked by credentials, unavailable local/device execution or an owner-only external action, complete all safe work, record the exact blocker and ask only for the one unavoidable action. Never invent secrets or data.
 
 ## 2. Project context to carry forward
 
@@ -94,12 +94,11 @@ Before recommending implementation:
    - Update ADRs when an architecture decision changes.
    - Do not change application behaviour or implement the feature during Research.
 
-8. **Deliver the next-turn Build brief**
-   - End the Research response with one complete, specific Build brief for the exact step.
-   - It should list scope, files, code requirements, tests, documentation and acceptance criteria.
-   - The user should only need to reply "Build". Do not ask the user to repeat the prompt or choose from a menu.
+8. **Create and execute the internal Build brief**
+   - Turn research into a file-by-file implementation plan with tests and acceptance criteria.
+   - Start Build automatically in the same Continue cycle. Do not wait for another user message.
 
-## 4. Phase B — Build gate (only after "Build")
+## 4. Phase B — Build gate (automatic immediately after Research)
 
 1. Re-read the latest Research document and inspect the actual current branch/files again.
 2. Confirm no newer commit or user change has invalidated the brief.
@@ -153,7 +152,7 @@ A premium feel comes from coherence, responsiveness and clear feedback—not fro
 
 ## 6. The 20 roadmap steps, each split into Research and Build
 
-The following pairs are the default task briefs. During Research, refine them against the live repository and current official references. During Build, implement only the accepted brief for that step.
+The following pairs are the default task briefs. During Research, refine them against the live repository and current official references. After saving Research, execute the corresponding Build prompt automatically in the same cycle.
 
 ### Step 1 — Repository foundation and engineering rules
 
@@ -317,48 +316,51 @@ Create pilot configuration/checklists, map/graph bundle manifest and update/roll
 
 ## 7. Research/build output format
 
-Every Research response must have:
-1. Step number/name and repository status.
-2. Product-specific findings.
-3. Current stable technology/version compatibility table with official sources.
-4. Alternatives considered and final choice.
-5. Premium UX/motion concept for this step.
-6. Security/privacy/licensing/cost risks.
-7. File-by-file implementation plan.
-8. Acceptance tests and measurable performance criteria.
-9. Research document path/commit.
-10. One ready-to-use Build brief and explicit instruction that no code has been implemented yet.
+Every Continue cycle reports both phases:
 
-Every Build response must have:
-1. Step number/name and exact scope.
-2. Files created/changed.
-3. Main implementation decisions.
-4. Test/build commands actually run and their real outcomes.
-5. Git commit(s) and links.
-6. Remaining configuration/secrets/device tests.
-7. Acceptance checklist and complete/partial/blocked status.
-8. The next step number, without starting its research automatically.
+### Research
+1. Step number/name and evidence-based repository status.
+2. Product-specific findings and official/current references.
+3. Stable compatibility matrix and alternatives where applicable.
+4. Security, privacy, licensing, cost and operational risks.
+5. Premium UX/motion direction, or N/A for infrastructure-only work.
+6. File-by-file implementation plan, edge cases and acceptance criteria.
+7. Research document path and commit reference.
+
+### Build and verification
+1. Exact implementation scope and decisions.
+2. Files created or changed.
+3. Commands actually run and their real outcomes; distinguish CI, local and physical-device tests.
+4. Commit SHA and GitHub link.
+5. Acceptance checklist with PASS / PARTIAL / BLOCKED evidence.
+6. Remaining configuration, credentials, owner-only actions and device tests.
+7. Next incomplete step number.
+
+Research must be saved before implementation begins, but the assistant must not stop between phases to ask for permission. Mark work PARTIAL or BLOCKED when acceptance evidence is missing.
 
 ## 8. Pipeline state and current checkpoint
 
-- The first architecture, technology and 20-step roadmap documents have been created.
-- The regional offline map strategy has been researched and documented separately.
-- The repository currently contains architecture/planning documentation; actual Android app and backend feature code have not been scaffolded yet.
-- Step 1 is **documentation-started, repository-hygiene acceptance still to audit**. Do not claim it fully complete until the live root tree confirms .gitignore, .editorconfig, env template and ADR conventions.
-- The first incomplete step must always be determined from the live GitHub repository, not from conversational assumptions.
-- The next "Next step" command should begin with a Step 1 completion audit/research gate. If Step 1's Research gate is still current and no repository changes invalidate it, produce the Step 1 Build brief; otherwise research the missing items first.
+- docs/PIPELINE_STATE.md is the canonical status register.
+- Reconcile it with the live branch, full tree, source, manifests, tests, workflows and recent commits before each cycle.
+- A document or old chat message is not proof that functionality exists.
+- Mark COMPLETE only when acceptance criteria have evidence from committed files and executed checks.
+- Keep step research under docs/research/step-NN-topic.md.
+- Update pipeline state with the implementation or a clearly linked follow-up commit.
+- Reinspect if a new commit arrives. Never overwrite concurrent work.
+- Initially, the repository contains planning documentation only; Android and backend feature code must be built in roadmap order.
 
 ## 9. Principles
 
-- One step at a time; never start the next Build before the current step is accepted.
-- Research is not implementation. Do not scaffold code during Research.
-- Build is not just documentation. Implement the actual feature within the scoped step.
-- Do not force technology into the project because it is trendy; justify each dependency by measured product value.
-- Prefer official/current documentation over random blog recommendations.
-- Do not guess package versions, API keys, service URLs, seller coordinates, regional map size or cloud prices.
-- Keep the product's premium visual identity consistent, but operational reliability and driver safety take priority.
-- Be explicit whenever work could not be run, tested or verified in the available environment.
-
+- One Continue command = one complete Research → Build → Verify → Commit milestone.
+- Never ask for a separate Build prompt after normal Research.
+- Do not silently implement future roadmap steps or bundle unrelated scope.
+- Research official current docs, releases, compatibility and security guidance before choosing dependencies.
+- Build means real scoped code/configuration, not another plan.
+- Enforce tenant isolation, seller privacy and active-trip GPS consent from the start.
+- Motion must be premium but accessible, truthful and battery-aware.
+- Never guess versions, secrets, URLs, seller coordinates, map size or cloud costs.
+- Report unrun tests honestly.
+- Do not autonomously deploy production, purchase services, create secrets, sign releases, run destructive migrations or force-push.
 
 ## 10. Starter references for motion and performance research
 

@@ -1,6 +1,6 @@
 # Milk — 20-Step Implementation Roadmap
 
-**Mandatory workflow:** Each step has two gates: Research first, Build second. Use [AI_DEVELOPMENT_PIPELINE.md](AI_DEVELOPMENT_PIPELINE.md) as the operating procedure. "Next step" means Research only; implementation begins only after the owner says "Build".
+**Automatic workflow:** Each step runs Research, then Build, Verify and Commit in sequence. Use [AI_DEVELOPMENT_PIPELINE.md](AI_DEVELOPMENT_PIPELINE.md) as the operating procedure. One "Continue / Next" command runs the complete cycle for the first incomplete step; a separate Build prompt is not required. Progress is tracked in [PIPELINE_STATE.md](PIPELINE_STATE.md).
 
 **Goal:** Build three independent Android apps (Driver, Seller, Owner) backed by one secure API and one PostgreSQL/PostGIS database.  
 **Delivery approach:** One vertical milestone at a time. Each step ends with working code and an acceptance check.  

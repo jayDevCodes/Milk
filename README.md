@@ -18,12 +18,23 @@ Milk is a single-repository platform for a dairy fleet with three separately ins
 - Notifications: Firebase Cloud Messaging.
 - Offline: Room on Android; durable retry queues and idempotent server writes.
 
+## Autonomous development workflow
+
+Every roadmap milestone follows Research → Build → Verify → Commit. Official technology documentation is checked first, findings are saved, implementation starts automatically and verified changes are committed. A separate Build prompt is not required.
+
+- **Continue** runs the next incomplete milestone.
+- **Status** reports evidence-backed progress.
+- **Research step N** intentionally performs research only.
+
+Progress is recorded in [docs/PIPELINE_STATE.md](docs/PIPELINE_STATE.md). See [the autonomous development pipeline](docs/AI_DEVELOPMENT_PIPELINE.md).
+
 ## Start with the design documents
 
 1. [System architecture](docs/ARCHITECTURE.md)
 2. [20-step implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
 3. [Technology stack research and decisions](docs/TECH_STACK_DECISIONS.md)
-4. [AI-assisted two-phase research/build pipeline](docs/AI_DEVELOPMENT_PIPELINE.md)
+4. [Autonomous research/build pipeline](docs/AI_DEVELOPMENT_PIPELINE.md)
+5. [Pipeline progress and acceptance status](docs/PIPELINE_STATE.md)
 
 ## Core product rules
 
