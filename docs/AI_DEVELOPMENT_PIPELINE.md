@@ -358,3 +358,24 @@ Every Build response must have:
 - Do not guess package versions, API keys, service URLs, seller coordinates, regional map size or cloud prices.
 - Keep the product's premium visual identity consistent, but operational reliability and driver safety take priority.
 - Be explicit whenever work could not be run, tested or verified in the available environment.
+
+
+## 10. Starter references for motion and performance research
+
+Recheck these official references during every relevant Research gate; they are starting points, not permanent version guarantees.
+
+- Compose animation quick guide and performance guidance: https://developer.android.com/develop/ui/compose/animation/quick-guide
+- Shared element transitions: https://developer.android.com/develop/ui/compose/animation/shared-elements
+- Predictive back in Compose: https://developer.android.com/develop/ui/compose/system/predictive-back-setup
+- Compose animation release notes: https://developer.android.com/jetpack/androidx/releases/compose-animation
+- Compose August 2026 release highlights, including interactive two-stage transitions: https://developer.android.com/blog/posts/what-s-new-in-the-jetpack-compose-august-26-release
+- Baseline Profiles overview: https://developer.android.com/topic/performance/baselineprofiles/overview
+- Macrobenchmark and Baseline Profile generation: https://developer.android.com/topic/performance/baselineprofiles/create-baselineprofile
+- MapLibre Native PMTiles Android example: https://maplibre.org/maplibre-native/android/examples/data/PMTiles/
+
+Current findings to carry into future research:
+- Compose shared-element APIs are stable in the 1.10 animation line; verify the selected Compose BOM maps to the required artifacts.
+- Predictive-back support should be treated as part of navigation polish, not an optional late add-on.
+- Newer interactive two-stage transition APIs may enable gesture-driven effects; use only if the selected Compose version is stable and the UX benefits the workflow.
+- Compose's own guidance recommends avoiding unnecessary layout work during animation; prefer draw/graphics-layer updates where appropriate.
+- Android documents Baseline Profiles as capable of improving code execution speed by about 30% for covered journeys; benchmark Milk's own flows before making any performance claim.
