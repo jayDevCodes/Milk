@@ -59,15 +59,15 @@ Use a modular monolith, not microservices. Use pg with parameterized SQL and exp
 
 | Component | Version / line | Research note |
 |---|---:|---|
-| Android Studio | Rabbit 2 2026.2.2 Patch 1 | Current stable |
-| Android Gradle Plugin | 9.5.0 | Stable AGP line |
-| Gradle Wrapper | 9.6.0 | Required/default for AGP 9.5 |
-| JDK | 17 | AGP 9.5 required/default JDK |
-| Kotlin | 2.4.21 | Latest stable on research date |
-| Compose BOM | 2026.09.00 | Latest stable Compose BOM found |
-| Maps SDK Android | 20.1.0 | Release dated 12 October 2026 |
-| MapLibre Compose | Not selected for v1 | Its API is still marked unstable; host native MapView through Compose AndroidView |
-| Navigation Compose | 2.10.2 | Stable |
+| Android Studio | Rabbit 2 2026.2.2 Patch 1 | Stable IDE line; use Apple Silicon build on M1 |
+| Android Gradle Plugin | 9.3.1 | Stable patch line; API 37 and JDK 17 supported |
+| Gradle | 9.7.0 | Meets AGP 9.3 minimum 9.5 and Kotlin 2.4.21 documented maximum 9.7 |
+| JDK | 17 | AGP 9.3 baseline |
+| Kotlin | 2.4.21 | Stable; officially tested with AGP through 9.3.1 and Gradle through 9.7 |
+| Compose BOM | 2026.09.00 | Stable BOM; Compose 1.12 requires compileSdk 37 and AGP 9 |
+| Navigation 3 | 1.2.1 | Stable since 4 November 2026; 1.3.0-alpha04 deliberately excluded |
+| MapLibre Native Android | 13.7.1 OpenGL artifact | Stable; OpenGL flavour has widest device compatibility; APK-asset PMTiles supported |
+| MapLibre Compose wrapper | Not selected for v1 | Host native MapView through Compose AndroidView; keep native lifecycle ownership |
 | Room | 3.0.3 | Stable Room 3 release |
 | DataStore | 1.3.0 | Stable |
 | WorkManager | 2.12.0 | Stable |
@@ -82,11 +82,13 @@ Use a modular monolith, not microservices. Use pg with parameterized SQL and exp
 
 This is a dated baseline, not a reason to upgrade dependencies blindly on every build. Pin exact versions in Gradle version catalogs and package-lock.json. Avoid dynamic plugin versions, latest tags and unpinned Docker images.
 
-## 3. Important Android build decision: AGP 9
+## 3. Important Android build decision: AGP 9 compatibility
 
-AGP 9 enables built-in Kotlin support by default. Do not blindly copy an AGP 8 template and apply the old Kotlin Android plugin on top of built-in Kotlin. Follow the AGP 9.5 setup/migration instructions and configure the Compose compiler plugin to match the selected Kotlin toolchain. Verify the first clean Gradle sync before generating all app modules.
+AGP 9 provides built-in Kotlin support. Do not also apply the legacy org.jetbrains.kotlin.android plugin. Apply org.jetbrains.kotlin.plugin.compose at the same Kotlin version as the selected compiler (2.4.21). The official Kotlin compatibility matrix lists Kotlin Gradle Plugin 2.4.20–2.4.21 as fully compatible through AGP 9.3.1 and Gradle 9.7.0. Newer AGP 9.4/9.5 and Gradle 9.9.1 are outside that published compatibility range for this Kotlin line; do not combine them merely because each is individually current.
 
-Use one Gradle version catalog at android/gradle/libs.versions.toml. Confirm AGP, Kotlin, Compose compiler, KSP, Hilt and Room3 compatibility together in a small proof-of-concept build.
+Compose BOM 2026.09.00 requires compileSdk 37 and AGP 9 or later. Use compileSdk 37, targetSdk 36 and provisional minSdk 24. Revisit minSdk using the actual driver/seller phone inventory before field pilot. Navigation 3.1.2 is stable; the 1.3 alpha line remains preview.
+
+Use one Gradle version catalog at android/gradle/libs.versions.toml. Prove AGP, built-in Kotlin, Compose compiler, Compose BOM, Navigation 3 and MapLibre together before adding DI, Room, WorkManager and later-step dependencies.
 
 ## 4. Why native Kotlin, not Flutter or React Native?
 

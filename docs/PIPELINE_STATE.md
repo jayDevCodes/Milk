@@ -7,14 +7,14 @@
 
 ## Current checkpoint
 
-**Step 01 — PARTIAL.** Repository foundations and CI guardrails are being added. Step 1 remains partial until the workflow passes and the maintainer checks the GitHub security settings. Android and backend source code are not scaffolded yet; that is expected before Steps 2 and 3.
+**Step 01 — PARTIAL.** Repository foundations and CI guardrails are committed. GitHub Actions run [#1](https://github.com/jayDevCodes/Milk/actions/runs/43740459888) passed. The maintainer still needs to check GitHub security settings in Settings → Security and analysis. Step 2 Android shell implementation is being researched.
 
 ## Milestone register
 
 | Step | Milestone | Status | Exit evidence |
 |---:|---|---|---|
 | 01 | Repository foundation and engineering rules | PARTIAL | Repo hygiene, ADRs, security/contribution docs and CI committed; CI run and settings confirmation pending |
-| 02 | Android monorepo and three app shells | PENDING | Three installable Compose apps, shared foundations and offline MapLibre proof build |
+| 02 | Android monorepo and three app shells | IN PROGRESS | Three installable Compose apps, shared foundations and offline MapLibre proof build |
 | 03 | Backend and database foundation | PENDING | Strict TypeScript API, validated environment, Postgres/PostGIS and clean migrations |
 | 04 | Authentication, roles and tenant security | PENDING | Owner/driver/seller auth and cross-dairy authorization tests pass |
 | 05 | Dairy master data and assignments | PENDING | Master data flows and server-side 15 km seller rule |
