@@ -31,9 +31,9 @@ Android local storage:
 - Android Keystore-backed secure storage protects refresh-token material where supported.
 
 Backend external integrations:
-- Google Maps SDK is used by Android clients for map rendering. Restrict mobile keys to the correct Android package names and signing certificate fingerprints.
-- Google Routes API is called from the backend for route geometry, road distance, duration and supported waypoint ordering. Do not expose an unrestricted server key in an APK.
-- Google Route Optimization API is the escalation path for large stop lists, multiple vehicles, time windows or richer fleet constraints.
+- MapLibre Native Android renders a regional PMTiles vector basemap bundled in each APK; map display does not need a remote tile API.
+- Valhalla is built from a buffered regional OSM extract and runs as a private routing engine behind Node.js. Node calls it for route geometry, road distance, duration, matrices and depot-fixed stop optimization; Android never calls Valhalla directly.
+- Use one OSM source snapshot for PMTiles and the Valhalla graph where practical so route geometry and displayed roads agree.
 - Firebase Cloud Messaging is for push notifications only. PostgreSQL remains the source of truth.
 
 ## 3. Technology decisions
@@ -52,7 +52,7 @@ Backend external integrations:
 | Database access | pg with a repository/service layer and SQL migrations | Explicit SQL for PostGIS and transaction-sensitive route operations |
 | Realtime | WSS (Node ws + Android OkHttp WebSocket) | Authenticated server-derived subscriptions, heartbeat, event IDs and reconnect/resync |
 | Push | Firebase Cloud Messaging | Push alerts; not live-location transport |
-| Maps | Google Maps Platform | Map tiles, road network, routes and ETA calculations |
+| Maps | MapLibre Native Android + local PMTiles | Offline regional vector map rendering on device |
 | CI | GitHub Actions | Separate checks and APK build jobs per app, plus backend checks |
 
 Pin exact dependency versions only when implementation begins, using current stable compatible releases and a committed Gradle version catalog / package lockfile. Do not guess old version numbers in this architecture document.
@@ -222,7 +222,7 @@ Module responsibilities:
 - vehicles: vehicle master and active driver association.
 - assignments: seller-to-vehicle and driver-to-vehicle assignments with history.
 - routes: route drafts, versions, stops, segment shapes and publication.
-- route-optimization: Google Maps adapter, limits, optimization jobs and result validation.
+- route-optimization: Valhalla adapter, local graph versioning, optimization jobs and result validation.
 - trips: trip lifecycle, route snapshot and stop events.
 - tracking: GPS ingestion, current location and location history.
 - notifications: FCM token registration and notification dispatch.
@@ -319,29 +319,33 @@ Do not mutate a published route version. Draft edits create a new version. A tri
 
 The seller's exact home point and vehicle road access point may differ. Keep the precise home pin as master data; optionally use a separate road-access point for safe route calculation when a house is away from a motorable road.
 
-## 11. Routing and ETA strategy
+## 11. Regional offline maps, routing and ETA
 
-### First release
-- Backend calls Google Routes API, not individual Android apps.
-- For a modest route, use Compute Routes with driving mode, stopovers and waypoint order optimization.
-- Save returned order, route geometry/polyline, leg distances and durations with the draft route version.
-- Return the estimated route for driver approval before publishing.
-- Keep depot fixed as origin and destination.
+### Offline basemap
+- Each app loads the dairy's regional PMTiles vector basemap through MapLibre Native Android; map rendering does not request map tiles from a third-party API.
+- Bundle the style, sprites and glyph/font assets needed for offline rendering. Keep visible OpenStreetMap attribution.
+- Use a buffered coverage polygon (initially about 20 km from depot) around the 15 km seller eligibility area; confirm actual boundary connectivity by driving test routes.
+- Generate the PMTiles archive from OSM PBF data using Protomaps Basemap/Planetiler. Do not scrape or bulk-download the public OSM tile servers.
 
-### Important Google Routes API constraints
-- Compute Routes supports up to 25 intermediate waypoints per request.
-- Waypoint-order optimization requires all intermediate waypoints to be stopovers (not via points) and has routing-preference restrictions; do not combine optimization and manual via-point shaping in the same request.
-- Requests with 11–25 intermediate waypoints can have higher billing.
-- For lists beyond the supported simple Compute Routes limit, or for multiple vehicles, time windows and more complex fleet constraints, evaluate Route Optimization API. Do not silently split a large optimization into arbitrary chunks and call it globally optimal.
-- Manual road-shaping via points are route geometry constraints, not pickup stops. They never receive pickup numbers, dwell time or pickup status.
-- After optimization, calculate/shape selected segments separately with via points, then preview the complete route.
-- Cache route results by route-version inputs and avoid recomputing on every map refresh.
+### Local routing engine
+- Build Valhalla graph tiles from the same buffered regional OSM source and run Valhalla as a private service reachable only by the Node backend.
+- Node's RoutingProvider adapter calls Valhalla for route geometry, driving distance/duration, time-distance matrices, map matching and optimized stop order.
+- Use Valhalla optimized-route behaviour with the dairy depot as both first and last input locations; intermediate seller stops can be reordered while depot endpoints remain fixed.
+- Save the approved route order, route geometry and routing-data version in the route-version snapshot.
+- Manual via-points shape road geometry only; they never become pickup stops and should be applied after stop-order optimization.
+- Validate returned seller-to-stop mapping and handle unreachable coordinates explicitly. Test the graph near its clipped boundary.
+- Valhalla uses OSM road topology/costing and does not guarantee live traffic. Label ETA as an estimate; improve it with measured collection-trip data later.
 
-ETA:
-- Use road-route leg duration, current trip position and remaining stop sequence.
+### 15 km seller eligibility rule
+- Validate seller home coordinates server-side using PostGIS geography distance: seller must be within 15,000 metres of the dairy depot.
+- This is a geodesic business boundary, not road distance and not the PMTiles coverage boundary.
+- Use a 5 km initial map/routing data margin beyond the 15 km rule (about 20 km coverage) to include junctions and route detours, then adjust using field tests.
+
+### ETA
 - ETA to a seller = current leg to next stop + durations/service times for all preceding pending stops + road duration to the seller.
 - Remaining-stop count is derived from the trip's pinned route version and pickup events, not guessed from nearby GPS.
-- Traffic-aware ETA can be refreshed periodically and on meaningful events, with a quota/cost guard. Do not call Routes API for every GPS ping.
+- Refresh ETA on meaningful position/progress changes and at a controlled interval; never recompute optimized stop order on every GPS ping.
+- When the phone loses network, cached route and offline map remain viewable, but fresh seller/owner live positions and server-calculated ETA are unavailable until connectivity returns.
 
 ## 12. Driver GPS and offline behaviour
 
@@ -431,13 +435,15 @@ Trips/tracking:
 
 All endpoints require validated inputs, authenticated identity, role authorization, tenant ownership checks, rate limiting where appropriate, and structured error responses. Use pagination for lists. Use idempotency keys for trip start/end, pickup events and GPS batch writes.
 
-## 15. Maps and credential protection
+## 15. Offline map assets, attribution and routing security
 
-- Android Maps SDK keys must be restricted to Android package names and signing certificate fingerprints, and only to the APIs needed by each app.
-- Backend Routes API credentials must be server-only, held in deployment secrets/secret manager, and restricted to the backend's intended API usage.
-- Never place a server API key in the Android app or commit any real key.
-- Configure quota alerts and budgets. Monitor requests by feature and avoid route recalculation per GPS update.
-- Display required map/provider attribution and follow Google Maps Platform terms for storage, caching and display of returned content.
+- Use MapLibre Native Android with the regional PMTiles archive bundled in each APK; include local style, sprite and glyph/font assets so map labels work offline.
+- Keep map source data and Valhalla graph data versioned together. Record source snapshot, region polygon, zoom range, tile schema and checksums in a map-bundle manifest.
+- Show visible OpenStreetMap attribution in every app and include the required ODbL/copyright notice.
+- Do not bulk-download or scrape tile.openstreetmap.org for offline packs. Use regional OSM PBF extracts or an explicitly licensed offline provider.
+- Do not bulk-copy Google Maps tiles into an APK; Google Maps Platform terms restrict prefetching and offline tile storage.
+- Keep Valhalla's internal service port private; only the authenticated Node backend can call it.
+- Avoid route recalculation on every GPS ping; route optimization runs on route creation/edit and ETA refreshes are controlled.
 
 ## 16. Privacy, audit and operational safeguards
 
@@ -458,7 +464,7 @@ Backend:
 - Integration tests against a real disposable PostgreSQL/PostGIS database.
 - Tests for tenant isolation, role boundaries, object-level access, route publishing, trip snapshots and GPS idempotency.
 - Contract tests against OpenAPI.
-- Google Maps and FCM adapters mocked in ordinary CI; optional controlled integration checks separately.
+- Valhalla adapter and FCM integration mocked in ordinary CI; optional local Valhalla graph integration checks separately.
 
 Android:
 - ViewModel/repository tests for route restore, offline cache, sync and trip states.
@@ -501,14 +507,15 @@ Official documentation reviewed for this baseline:
 - Android background location: https://developer.android.com/develop/sensors-and-location/location/permissions/background
 - Android foreground-service types: https://developer.android.com/develop/background-work/services/fgs/service-types
 - Android foreground-service background-start restrictions: https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start
-- Google Routes API waypoint optimization: https://developers.google.com/maps/documentation/routes/opt-way
-- Google Routes API usage and limits: https://developers.google.com/maps/documentation/routes/usage-and-billing
-- Google Route Optimization API: https://developers.google.com/maps/documentation/route-optimization/overview
-- Google Route Matrix: https://developers.google.com/maps/documentation/routes/compute_route_matrix
+- MapLibre Native Android releases: https://github.com/maplibre/maplibre-native/releases
+- MapLibre Android PMTiles support: https://maplibre.org/maplibre-native/android/examples/data/PMTiles/
+- Protomaps regional basemap generation: https://docs.protomaps.com/basemaps/build
+- OpenStreetMap tile usage policy: https://operations.osmfoundation.org/policies/tiles/
+- Valhalla routing and optimized-route APIs: https://valhalla.github.io/valhalla/api/
+- Valhalla regional graph building: https://valhalla.github.io/valhalla/building/
 - PostGIS ST_DWithin: https://postgis.net/docs/ST_DWithin.html
 - PostGIS spatial indexes: https://postgis.net/documentation/faq/spatial-indexes/
-- Socket.IO rooms: https://socket.io/docs/v4/subscriptions/
-- Socket.IO middleware/authentication: https://socket.io/docs/v4/middlewares/
+- WebSocket API overview: https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
 - Firebase Cloud Messaging Android setup: https://firebase.google.com/docs/cloud-messaging/android/get-started
 - PostgreSQL Row Security Policies: https://www.postgresql.org/docs/current/ddl-rowsecurity.html
 - OWASP Authorization Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html
