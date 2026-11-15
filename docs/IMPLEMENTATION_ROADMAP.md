@@ -272,16 +272,16 @@
 - Store latest vehicle location separately from append-only history.
 - Validate GPS batches against assigned driver, assigned vehicle and active trip.
 - Add recorded_at/received_at, accuracy and basic jump/out-of-order checks.
-- Implement Socket.IO authentication middleware using current access token.
-- Server derives and authorizes room membership; clients never pick arbitrary rooms.
+- Implement authenticated WebSocket upgrade using the current access token.
+- Server derives and authorizes subscription membership; clients never choose arbitrary tenant or vehicle channels.
 - Broadcast vehicle.location.updated and trip.progress.updated.
 - Add stale-location calculation and reconnect resync from REST.
 - Keep Redis adapter optional until multiple backend instances are deployed.
 
 **Files**
 - backend/src/modules/tracking.
-- backend/src/realtime/socket-server, rooms, events.
-- contracts/events.md and Socket.IO integration tests.
+- backend/src/realtime/websocket-server, subscriptions, events.
+- contracts/events.md and WebSocket protocol, authentication, reconnect and resync integration tests.
 
 **Acceptance**
 - Owner, assigned driver and assigned seller receive only permitted events.
