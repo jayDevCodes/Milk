@@ -20,7 +20,7 @@
 | Offline database | Room 3.0.3 stable | Cache saved routes and persist GPS/pickup outbox operations |
 | Small settings | DataStore 1.3.0 | Preferences and encrypted serializer integration options |
 | Deferred sync | WorkManager 2.12.0 | Retry deferred/offline work; not a repeating active GPS timer |
-| Map renderer | Maps Compose 9.0.1 over Maps SDK Android 20.1.0 | Compose map UI, route lines, markers and moving vehicle |
+| Map renderer | MapLibre Native Android 13.7.1 + PMTiles | Local vector map, route lines, numbered stops and moving vehicle without tile API calls |
 | Location | Google Play services Fused Location Provider + Android location foreground service | Active-trip location with visible service notification |
 | Heading | Android Rotation Vector sensor | Seller app's requested heading-up map |
 | REST client | Retrofit + OkHttp + kotlinx.serialization 1.13.0 | Typed API calls and JSON serialization |
@@ -66,7 +66,7 @@ Use a modular monolith, not microservices. Use pg with parameterized SQL and exp
 | Kotlin | 2.4.21 | Latest stable on research date |
 | Compose BOM | 2026.09.00 | Latest stable Compose BOM found |
 | Maps SDK Android | 20.1.0 | Release dated 12 October 2026 |
-| Maps Compose | 9.0.1 | Release dated 8 October 2026 |
+| MapLibre Compose | Not selected for v1 | Its API is still marked unstable; host native MapView through Compose AndroidView |
 | Navigation Compose | 2.10.2 | Stable |
 | Room | 3.0.3 | Stable Room 3 release |
 | DataStore | 1.3.0 | Stable |
@@ -129,19 +129,18 @@ Example events: vehicle.location.updated, trip.progress.updated, trip.started, t
 ## 6. Maps and routing decision
 
 For the first pilot:
-- Render maps with Google Maps SDK Android 20.1.0 and Maps Compose 9.0.1.
-- Call Google Routes API from the backend for road distance, route duration and route geometry.
-- Optimize waypoint order only when the driver creates/edits a route; save the result into a draft for review.
-- For larger stop lists or fleet/time-window constraints, use Route Optimization API rather than splitting a route arbitrarily and claiming global optimization.
-- Cache route calculations by input/version. Never recompute route order on every GPS ping.
-- Refresh ETA on meaningful location/progress changes or a controlled traffic refresh schedule.
+- Render the regional PMTiles vector basemap locally with MapLibre Native Android.
+- Generate the map from a buffered 15 km dairy area using OSM PBF + Protomaps Basemap/Planetiler; include local style, sprites and glyphs.
+- Build a private Valhalla graph from the same buffered regional OSM data for routes, matrices and depot-fixed optimized seller sequence.
+- Keep the Node backend as the public API; Android clients do not call Valhalla directly.
+- Cache route geometry/order by route version; never recompute route order on every GPS ping.
+- ETA is model-based from OSM road graph and is refreshed only on meaningful progress changes or a controlled interval.
 
 Cost and key safety:
-- Google Maps Platform requires billing. Compute Routes, Route Matrix and Route Optimization have different SKUs/free caps; an ordinary route, optimized route and fleet optimization are not the same billable operation.
-- Restrict Android keys by package name, signing certificate SHA-1 and allowed APIs.
-- Keep server Routes API keys only on the backend, never in an APK.
-- Set quotas/budget alerts and verify billing before a live pilot.
-- Test actual roads in the dairy's collection area, particularly rural approach roads.
+- Local PMTiles rendering and a self-hosted Valhalla graph avoid repeated third-party tile/routing API charges for the selected service region; hosting, map generation, storage and maintenance still have operational costs.
+- Keep OSM attribution visible and follow ODbL obligations for the generated/distributed regional map.
+- Do not bulk-download public OSM tile servers; build from licensed OSM PBF data or a provider that permits offline packaging.
+- Verify actual rural roads in the dairy collection area; missing OSM features do not appear just because the zoom level is higher.
 
 Future alternative:
 - MapLibre Native + OpenStreetMap data and a routing engine such as OSRM/Valhalla/GraphHopper can reduce dependence on Google.
@@ -274,9 +273,10 @@ Do not add Kubernetes, microservices, Kafka, Redis cluster, GraphQL, MongoDB, Fi
 - WebSocket API: https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
 
 ### Maps/routing
-- Routes API usage and billing: https://developers.google.com/maps/documentation/routes/usage-and-billing
-- Route Optimization API: https://developers.google.com/maps/documentation/route-optimization/overview
-- Maps API key restrictions: https://developers.google.com/maps/documentation/android-sdk/get-api-key
-- OSRM alternative: https://project-osrm.org/docs/v26.4.0/
+- Valhalla routing API: https://valhalla.github.io/valhalla/api/
+- Valhalla optimized route API: https://valhalla.github.io/valhalla/api/optimized_route/
+- Valhalla regional graph build: https://valhalla.github.io/valhalla/building/
+- OpenStreetMap tile usage policy: https://operations.osmfoundation.org/policies/tiles/
+- PostGIS ST_DWithin: https://postgis.net/docs/ST_DWithin.html
 
 Recheck versions and billing before locking dependencies for the actual Step 2/3 build.
