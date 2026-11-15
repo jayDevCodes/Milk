@@ -14,7 +14,7 @@ Milk is a single-repository platform for a dairy fleet with three separately ins
 - Backend: Node.js, TypeScript and Express as a modular monolith.
 - Data: PostgreSQL + PostGIS.
 - Realtime: Socket.IO with server-authorized rooms.
-- Maps and routing: Google Maps Platform Maps SDK, Routes API and (for larger/constrained fleet optimization) Route Optimization API.
+- Maps: MapLibre Native Android + regional PMTiles offline vector map; routing: private Valhalla graph built from buffered OpenStreetMap data.
 - Notifications: Firebase Cloud Messaging.
 - Offline: Room on Android; durable retry queues and idempotent server writes.
 
@@ -45,3 +45,5 @@ This repository began empty. The initial commits establish the architecture and 
 - Keep database changes in versioned migrations.
 - Keep API contracts documented and tested.
 - Prefer small pull requests or milestone commits with passing checks.
+
+- [Regional offline map and routing strategy](docs/OFFLINE_MAP_STRATEGY.md)
