@@ -1,0 +1,12 @@
+{
+  "version": 8,
+  "name": "Milk Local Renderer Preview",
+  "sources": {},
+  "layers": [
+    {
+      "id": "milk-preview-background",
+      "type": "background",
+      "paint": { "background-color": "#dce8df" }
+    }
+  ]
+}
