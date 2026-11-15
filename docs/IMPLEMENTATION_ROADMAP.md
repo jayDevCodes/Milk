@@ -28,7 +28,9 @@
 - Create a Kotlin Gradle project with a version catalog and shared build conventions.
 - Create driver, seller and owner Android application modules.
 - Set distinct application IDs: in.dairylivetrack.driver, in.dairylivetrack.seller and in.dairylivetrack.owner.
-- Add shared core modules only for common models, network, auth, design system, database, maps, location and notifications.
+- Add shared core modules only for common models, network, auth, design system, database, MapLibre maps, location and notifications.
+- Embed MapLibre Native MapView in Compose via AndroidView for the first stable implementation.
+- Add the regional PMTiles bundle, local style/sprite/glyph assets and visible OSM attribution to all three apps.
 - Add Compose Material 3, navigation, dependency injection, coroutines and Flow using compatible stable versions.
 - Each app gets a minimal launch screen, role-specific theme/navigation shell and app metadata.
 
@@ -157,26 +159,28 @@
 ## Step 8 — Route calculation and optimization
 
 **Build**
-- Add server-side Google Maps Routes API adapter.
-- Calculate driving geometry, distance and per-leg duration.
-- For supported small routes, request waypoint-order optimization and capture the returned optimized order.
-- Keep the dairy depot as fixed origin/destination.
+- Build a private Valhalla routing graph from the dairy's buffered regional OSM PBF extract.
+- Run Valhalla as a private routing service and expose it only through the Node backend RoutingProvider adapter.
+- Calculate driving geometry, distance and per-leg duration from the local road graph.
+- Use Valhalla optimized-route service to keep the dairy depot fixed as first and last point while reordering seller stops.
 - Present before/after sequence and distance/time comparison to the driver.
-- Save the proposed order in the draft; require driver approval before publish.
-- Add route calculation cache and usage/quota logging.
-- Define escalation to Route Optimization API for more than 25 intermediate waypoints or multi-vehicle/time-window constraints.
+- Save proposed order, route geometry and routing-data version in the draft; require driver approval before publish.
+- Add route calculation cache and controlled ETA refresh; do not recalculate optimization on each GPS update.
+- Keep manual via-point shaping separate from seller stop optimization.
 
 **Files**
-- backend/src/integrations/google-maps.
+- backend/src/integrations/routing-provider.
 - backend/src/modules/route-optimization.
+- infra/valhalla with private routing-engine configuration/build instructions.
+- docs/OFFLINE_MAP_STRATEGY.md and versioned OSM source/map manifest.
 - Driver app: optimization preview and approval UI.
-- Server environment template with placeholder key names only.
 
 **Acceptance**
-- Optimized sequence matches returned API indices and still contains each required seller once.
+- Optimized sequence correctly maps Valhalla returned locations back to stable seller/route-stop IDs and contains each required seller once.
 - Depot remains first and last.
-- More-than-limit input gets a clear escalation/error path, not a misleading partial optimization.
-- API failure leaves the draft intact and editable.
+- Unreachable seller coordinates and graph-boundary gaps produce a clear route-review error.
+- Valhalla failure leaves the draft intact and editable.
+- Results are compared against sample real drives in the dairy region.
 
 ## Step 9 — Manual segment shaping and route preview
 
@@ -294,7 +298,7 @@
 **Build**
 - Implement seller activation/login and own profile context.
 - Fetch the seller's own assigned vehicle, home point and active trip progress.
-- Render map, vehicle location, seller home pin, heading-up map and last-updated state.
+- Render the bundled PMTiles map offline, plus vehicle location, seller home pin, heading-up map and last-updated state.
 - Use rotation-vector sensor/orientation to rotate map with the phone; smooth heading changes and offer north-up fallback.
 - Show road distance and ETA once the route data is available.
 - Display only pickup numbers/count before this seller's stop, not other seller names/addresses.
@@ -302,11 +306,13 @@
 
 **Files**
 - Seller app auth, dashboard, live-tracking, compass map.
-- Android shared/core-maps and sensor helper.
+- Android shared/core-maps (MapLibre Native) and sensor helper.
+- Local style, sprites/glyphs and regional map bundle are bundled or installed as a versioned map pack.
 - Backend GET /seller/me/tracking and authorized vehicle event subscription.
 
 **Acceptance**
 - Seller can use the app away from home; home pin remains the registered master-data coordinate.
+- Map display and cached route remain available in airplane mode; live vehicle state is clearly stale until backend connectivity returns.
 - Phone rotation rotates the map as requested.
 - Seller cannot infer other sellers' private details from API payloads or sockets.
 - Stale location is clearly indicated.
@@ -404,7 +410,7 @@
 - Build signed release APKs using protected secrets; never store keystore/password in repository.
 - Deploy backend to an HTTPS host and PostgreSQL/PostGIS to managed service or securely operated database.
 - Add health/readiness checks, structured logs, monitoring, alerts and automated backups.
-- Configure Google Maps key restrictions, quota alerts and environment-specific keys.
+- Verify PMTiles bundle checksums, OSM attribution, offline style assets and regional coverage; deploy the private Valhalla graph/service.
 - Publish three APK assets in a GitHub Release with checksums and installation notes.
 - Test database restore and app upgrade/Room migration before rollout.
 
@@ -419,15 +425,15 @@
 **Acceptance**
 - A clean commit produces passing CI and the three expected APKs.
 - Production secrets exist only in secure deployment settings.
-- Android release installs/upgrades successfully.
+- Android release installs/upgrades successfully and the regional map renders in airplane mode.
 - Backend is reachable over HTTPS and backups are restorable.
 
 ## Step 20 — Real dairy pilot, measured tuning and launch
 
 **Build**
-- Pilot with one dairy, one depot, a small number of vehicles/drivers/sellers and real routes.
+- Pilot with one dairy, one depot, a small number of vehicles/drivers/sellers and real routes. Generate the initial PMTiles and Valhalla graph from a buffered regional OSM extract.
 - Verify every seller pin and road-access point physically before route publication.
-- Run supervised collection trips and compare ETA/route distance against actual operation.
+- Run supervised collection trips and compare Valhalla ETA/route distance against actual operation; verify rural road coverage and map rendering in airplane mode.
 - Observe GPS staleness, battery drain, mobile data, missed uploads and socket reconnects.
 - Tune location sampling, ETA refresh frequency, map loading and history retention based on measurements.
 - Train owner and drivers; provide seller installation/help instructions.
