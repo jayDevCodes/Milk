@@ -19,7 +19,7 @@ Out of scope for the first release: milk weighing, fat/SNF, payment accounting, 
 ## 2. Architecture at a glance
 
 - Driver Android app ─┐
-- Seller Android app ─┼── HTTPS REST API + authenticated Socket.IO ── Express modular monolith
+- Seller Android app ─┼── HTTPS REST API + authenticated WebSocket (WSS) ── Express modular monolith
 - Owner Android app ──┘                                              │
                                                                       ├── PostgreSQL + PostGIS
                                                                       ├── Google Maps Platform
@@ -50,7 +50,7 @@ Backend external integrations:
 | Primary database | PostgreSQL | Transactions, constraints and relational integrity |
 | Geospatial database | PostGIS extension | Geographic points, distance checks and spatial indexing |
 | Database access | pg with a repository/service layer and SQL migrations | Explicit SQL for PostGIS and transaction-sensitive route operations |
-| Realtime | Socket.IO | Authenticated event delivery and role-scoped rooms |
+| Realtime | WSS (Node ws + Android OkHttp WebSocket) | Authenticated server-derived subscriptions, heartbeat, event IDs and reconnect/resync |
 | Push | Firebase Cloud Messaging | Push alerts; not live-location transport |
 | Maps | Google Maps Platform | Map tiles, road network, routes and ETA calculations |
 | CI | GitHub Actions | Separate checks and APK build jobs per app, plus backend checks |
@@ -110,8 +110,8 @@ The initial directory layout should be:
             google-maps/
             firebase/
           realtime/
-            socket-server/
-            rooms/
+            websocket-server/
+            subscriptions/
             events/
           database/
             migrations/
@@ -162,7 +162,7 @@ Each app follows the same broad layers:
 - Data: repositories, remote data sources and Room data sources.
 - Platform adapters: location, sensors, maps, notifications and secure storage.
 
-Do not let a Composable call Retrofit, Room, GPS providers or Socket.IO directly. A ViewModel observes repository Flows and exposes one screen state. UI events call ViewModel methods.
+Do not let a Composable call Retrofit, Room, GPS providers or WebSocket directly. A ViewModel observes repository Flows and exposes one screen state. UI events call ViewModel methods.
 
 ### 5.1 Driver app
 
@@ -240,7 +240,7 @@ Role capabilities:
 - Seller: their own profile, assigned vehicle's permitted live state, and their own pickup status/progress.
 - No client may pick a dairy_id or role and gain permissions by sending it in the request body.
 
-Authorization must be checked on every REST request and every Socket.IO room join. Use PostgreSQL constraints and, where correctly implemented, Row-Level Security as defense in depth. The application database role must not be a superuser or have BYPASSRLS. Set tenant context transaction-locally and test that pooled connections cannot leak one tenant's context to another request.
+Authorization must be checked on every REST request and every WebSocket subscription. Use PostgreSQL constraints and, where correctly implemented, Row-Level Security as defense in depth. The application database role must not be a superuser or have BYPASSRLS. Set tenant context transaction-locally and test that pooled connections cannot leak one tenant's context to another request.
 
 Use deny-by-default authorization. Check both role and ownership of the specific record; role checks alone are insufficient. Use UUID identifiers for externally addressed resources.
 
@@ -365,9 +365,9 @@ GPS reliability:
 
 WorkManager is for deferred/retryable sync work, not a substitute for the active-trip location foreground service.
 
-## 13. Realtime events and Socket.IO
+## 13. Realtime events and WebSocket
 
-REST remains the source of truth for login, route data, trip lifecycle and pickup writes. Socket.IO distributes updates.
+REST remains the source of truth for login, route data, trip lifecycle and pickup writes. WebSocket over WSS distributes server-pushed updates. REST remains the source of truth for writes and recovery snapshots.
 
 Example event names:
 - vehicle.location.updated
@@ -377,7 +377,7 @@ Example event names:
 - route.version.published
 - notification.created
 
-Server-controlled rooms:
+Server-controlled subscriptions:
 - dairy:{dairyId}:owners — owner membership only after tenant check.
 - vehicle:{vehicleId}:owners — authorized owner subscriptions.
 - vehicle:{vehicleId}:driver — the assigned driver's own vehicle.
@@ -385,7 +385,7 @@ Server-controlled rooms:
 
 Clients cannot choose arbitrary rooms. The server derives room membership from the authenticated principal and database assignments. Recheck permissions on reconnect and assignment changes. Do not emit seller names/addresses into seller tracking events.
 
-Socket authentication uses the same access-token validation as REST. Validate input events, throttle noisy clients and do not accept location writes from the seller or owner app. Driver GPS writes must be authorized against the driver, assigned vehicle and active trip. If the service later runs multiple instances, add a shared Socket.IO adapter such as Redis; it is not a mandatory MVP dependency.
+WebSocket upgrade authentication uses the same access-token validation as REST. Validate input events, throttle noisy clients and do not accept location writes from the seller or owner app. Driver GPS writes must be authorized against the driver, assigned vehicle and active trip. If the service later runs multiple instances, publish events through shared Redis pub/sub or a message broker; it is not a mandatory MVP dependency.
 
 ## 14. API surface (initial contract)
 
@@ -507,7 +507,7 @@ Official documentation reviewed for this baseline:
 - Google Route Matrix: https://developers.google.com/maps/documentation/routes/compute_route_matrix
 - PostGIS ST_DWithin: https://postgis.net/docs/ST_DWithin.html
 - PostGIS spatial indexes: https://postgis.net/documentation/faq/spatial-indexes/
-- Socket.IO rooms: https://socket.io/docs/v4/rooms/
+- Socket.IO rooms: https://socket.io/docs/v4/subscriptions/
 - Socket.IO middleware/authentication: https://socket.io/docs/v4/middlewares/
 - Firebase Cloud Messaging Android setup: https://firebase.google.com/docs/cloud-messaging/android/get-started
 - PostgreSQL Row Security Policies: https://www.postgresql.org/docs/current/ddl-rowsecurity.html
