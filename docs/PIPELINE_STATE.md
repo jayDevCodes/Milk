@@ -23,7 +23,7 @@ Execution: Continue runs Research → Build → Verify → Commit for the first 
 | 15 | Remaining stops, ETA and notifications | PENDING | Correct stop count/ETA and clear stale/offline state |
 | 16 | Owner fleet dashboard | PENDING | Owner fleet state and role-safe controls |
 | 17 | History, reports and audit | PENDING | Trip history, reports and audit trail |
-| 18 | Security, reliability and end-to-end tests | PENDING | Threat model, recovery, offline, GPS and device checks |
+| 18 | Security, reliability and end-to-end tests | PENDING | Threat model, recovery, offline/GPS tests, physical MapLibre renderer and offline pan/zoom on representative Android handsets, and confirmation that driver/seller handset inventory supports minSdk 24 |
 | 19 | CI/CD, deployment and APK distribution | PENDING | Verified deployment, signed releases, backups and monitoring |
 | 20 | Real dairy pilot and launch | PENDING | Field routes, privacy, battery and incident thresholds accepted |
 

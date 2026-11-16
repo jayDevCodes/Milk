@@ -35,16 +35,16 @@ A fresh CI run on the updated SDK workflow reached Kotlin compilation and expose
 
 ## Verification status
 
-The three app modules, shared libraries, role test, Gradle configuration and MapLibre preview are committed. The earlier CI failures happened before Gradle was invoked, so they do not indicate an app-source compilation failure. This environment cannot run Gradle or Android emulators locally. The new CI run must now verify that the escaped package identifiers compile, all three APKs assemble, and the shared unit test passes.
+The three app modules, shared libraries, role test, Gradle configuration and MapLibre preview are committed. The earlier CI failures happened before Gradle was invoked, so they do not indicate an app-source compilation failure. This environment cannot run Gradle or Android emulators locally. CI verification succeeded on 2026-11-16 in run [43796684275](https://github.com/jayDevCodes/Milk/actions/runs/43796684275), commit 6e125a8035d023d0c292bef43d3ac194a9f81d23. All three debug APK tasks (`:apps:driver:assembleDebug`, `:apps:seller:assembleDebug`, `:apps:owner:assembleDebug`) passed with `BUILD SUCCESSFUL in 1m 36s`; the shared `:core:app-shell:testDebugUnitTest` task passed with `BUILD SUCCESSFUL in 22s`. Repository guardrails also passed on the same commit in run [43796684303](https://github.com/jayDevCodes/Milk/actions/runs/43796684303).
 
 Real PMTiles display, offline pan/zoom, low-end GPU behaviour, foreground location and battery tests still require physical-device validation.
 
-## Remaining Step 2 acceptance
+## Step 2 acceptance
 
-- Confirm the updated Android CI workflow builds all three APKs and passes the shared role tests; repair any build/test failures found.
-- Verify MapLibre local renderer on physical Android hardware.
-- Check actual driver/seller phone inventory before locking minSdk 24.
-- Add real regional PMTiles only after OSM coverage generation and licence/attribution checks.
+The Android monorepo/app-shell milestone is complete for the CI-verifiable scope: three role-specific debug APKs assemble and the shared role tests pass. Device-specific acceptance is tracked separately so this milestone does not falsely claim physical-device verification.
+
+- Step 18: verify MapLibre local rendering and offline pan/zoom on physical Android hardware; confirm representative driver/seller handset inventory supports minSdk 24.
+- Step 10: integrate regional PMTiles only after OSM coverage generation and licence/attribution checks.
 
 ## Current official references
 
