@@ -65,7 +65,7 @@ jobs:
       - name: Capture lockfile for repository pinning
         working-directory: backend
         run: |
-          node --input-type=module -e 'import { readFileSync } from "node:fs"; import { gzipSync } from "node:zlib"; console.log("MILK_LOCKFILE_GZIP_BASE64_START"); console.log(gzipSync(readFileSync("package-lock.json")).toString("base64")); console.log("MILK_LOCKFILE_GZIP_BASE64_END");'
+          node --input-type=module -e 'import { readFileSync } from "node:fs"; console.log("MILK_LOCKFILE_JSON_START"); console.log(readFileSync("package-lock.json", "utf8")); console.log("MILK_LOCKFILE_JSON_END");'
 
       - name: Install locked dependencies
         working-directory: backend
