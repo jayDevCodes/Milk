@@ -165,7 +165,7 @@ export function createAuthRouter(pool: Pool | null): RouterType {
     });
   });
 
-  const authenticateRequest = pool
+  const authenticateRequest: import("express").RequestHandler = pool
     ? authenticate(pool)
     : (_request, _response, next) => next(new HttpError(503, "DATABASE_UNAVAILABLE", "Authentication is temporarily unavailable"));
 
