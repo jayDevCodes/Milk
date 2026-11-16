@@ -12,7 +12,7 @@ const databaseUrl = process.env.DATABASE_URL;
 
 test("owner registration, login, role context, tenant isolation and logout", { skip: !databaseUrl }, async () => {
   const pool = new Pool({ connectionString: databaseUrl, max: 4, connectionTimeoutMillis: 5_000 });
-  const app = createApp({ databasePool: pool, logger: createLogger("silent") });
+  const app = createApp({ databasePool: pool, allowOwnerSelfRegistration: true, logger: createLogger("silent") });
   const server = app.listen(0, "127.0.0.1");
   await once(server, "listening");
   const address = server.address();

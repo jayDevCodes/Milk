@@ -8,6 +8,7 @@ const environmentSchema = z.object({
   DATABASE_SSL: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   DB_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+  OWNER_SELF_REGISTRATION_ENABLED: z.enum(["true", "false"]).optional(),
 });
 
 export type AppConfig = {
@@ -18,6 +19,7 @@ export type AppConfig = {
   databaseSsl: boolean;
   databasePoolMax: number;
   logLevel: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | "silent";
+  allowOwnerSelfRegistration: boolean;
 };
 
 export function parseEnvironment(source: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -38,5 +40,8 @@ export function parseEnvironment(source: NodeJS.ProcessEnv = process.env): AppCo
     databaseSsl: result.data.DATABASE_SSL,
     databasePoolMax: result.data.DB_POOL_MAX,
     logLevel: result.data.LOG_LEVEL,
+    allowOwnerSelfRegistration: result.data.OWNER_SELF_REGISTRATION_ENABLED === undefined
+      ? result.data.NODE_ENV === "development"
+      : result.data.OWNER_SELF_REGISTRATION_ENABLED === "true",
   };
 }

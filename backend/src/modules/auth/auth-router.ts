@@ -36,10 +36,13 @@ function requireDatabase(pool: Pool | null): asserts pool is Pool {
   if (!pool) throw new HttpError(503, "DATABASE_UNAVAILABLE", "Authentication is temporarily unavailable");
 }
 
-export function createAuthRouter(pool: Pool | null): RouterType {
+export function createAuthRouter(pool: Pool | null, options: { allowOwnerSelfRegistration?: boolean } = {}): RouterType {
   const router = Router();
 
   router.post("/register", async (request, response) => {
+    if (!options.allowOwnerSelfRegistration) {
+      throw new HttpError(404, "NOT_FOUND", "The requested resource was not found");
+    }
     requireDatabase(pool);
     const input = registerSchema.parse(request.body);
     const passwordHash = await hashPassword(input.password);

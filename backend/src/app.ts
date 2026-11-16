@@ -12,6 +12,7 @@ export type DatabaseReadinessCheck = () => Promise<void>;
 export interface CreateAppOptions {
   databaseReadiness?: DatabaseReadinessCheck | null;
   databasePool?: Pool | null;
+  allowOwnerSelfRegistration?: boolean;
   logger?: Logger;
 }
 
@@ -78,7 +79,9 @@ export function createApp(options: CreateAppOptions = {}): Express {
     }
   });
 
-  app.use("/api/v1/auth", createAuthRouter(options.databasePool ?? null));
+  app.use("/api/v1/auth", createAuthRouter(options.databasePool ?? null, {
+    allowOwnerSelfRegistration: options.allowOwnerSelfRegistration ?? false,
+  }));
 
   app.use((_request, _response, next) => {
     next(new HttpError(404, "NOT_FOUND", "The requested resource was not found"));
