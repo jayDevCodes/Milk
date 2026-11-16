@@ -309,3 +309,7 @@ Operational choices:
 - node-postgres 8.23.1 release and Node 26 support: https://www.npmjs.com/package/pg and https://github.com/brianc/node-postgres/blob/master/CHANGELOG.md
 - PostgreSQL 18.7 release and support policy: https://www.postgresql.org/about/news/postgresql-187-1712-1616-1520-1425-and-19-rc-2-released/ and https://www.postgresql.org/support/versioning/
 - PostGIS 18-3.7 image compatibility and PostgreSQL 18 data-volume path: https://hub.docker.com/r/postgis/postgis/
+
+
+### Step 3 final verification
+The final committed npm lockfile is backend/package-lock.json. Backend CI now runs npm ci with setup-node caching against this lock; it does not regenerate dependencies on each run. On 16 November 2026, workflow [43801167056](https://github.com/jayDevCodes/Milk/actions/runs/43801167056) passed from a fresh PostgreSQL 18.7/PostGIS 3.7 service: npm ci installed 109 packages, strict tsc succeeded, both SQL migrations applied, all 8 tests passed (0 failed), production compilation succeeded, compiled migration rerun was idempotent, and GET /health/ready returned ready. Repository guardrails passed in [43801167240](https://github.com/jayDevCodes/Milk/actions/runs/43801167240). Full evidence: docs/research/step-03-backend-database-foundation.md.

@@ -62,7 +62,7 @@ The TypeScript API is under `backend/` and runs as one Express modular monolith.
 - Every business record is scoped to a dairy; authorization is checked for each resource and action.
 
 ## Current status
-Repository foundations and all three Android app shells are committed and CI-verified. The initial TypeScript backend and PostgreSQL/PostGIS migration foundation are now being built and verified. There is no production deployment, production credential, real seller data, regional PMTiles package or Valhalla graph yet.
+Repository foundations and all three Android app shells are committed and CI-verified. The TypeScript backend and PostgreSQL/PostGIS migration foundation are implemented and CI-verified. Authentication and tenant authorization are next; there is no production deployment, production credential, real seller data, regional PMTiles package or Valhalla graph yet.
 
 ## Development policy
 - Never commit API keys, signing keys, service-account files, production tokens or real seller personal data.
