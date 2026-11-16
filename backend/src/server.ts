@@ -18,7 +18,7 @@ const databaseReadiness: DatabaseReadinessCheck | null = pool
     }
   : null;
 
-const app = createApp({ databaseReadiness, logger });
+const app = createApp({ databasePool: pool, databaseReadiness, logger });
 const server = app.listen(config.port, config.host, () => {
   logger.info({ host: config.host, port: config.port, nodeEnv: config.nodeEnv }, "Milk API listening");
 });

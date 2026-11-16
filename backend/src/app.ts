@@ -1,14 +1,17 @@
 import { randomUUID } from "node:crypto";
 import express, { type Express } from "express";
 import type { Logger } from "pino";
+import type { Pool } from "pg";
 import { createErrorHandler } from "./common/middleware/error-handler.js";
 import { HttpError } from "./common/errors/http-error.js";
 import { createLogger } from "./common/logging/logger.js";
+import { createAuthRouter } from "./modules/auth/auth-router.js";
 
 export type DatabaseReadinessCheck = () => Promise<void>;
 
 export interface CreateAppOptions {
   databaseReadiness?: DatabaseReadinessCheck | null;
+  databasePool?: Pool | null;
   logger?: Logger;
 }
 
@@ -74,6 +77,8 @@ export function createApp(options: CreateAppOptions = {}): Express {
       });
     }
   });
+
+  app.use("/api/v1/auth", createAuthRouter(options.databasePool ?? null));
 
   app.use((_request, _response, next) => {
     next(new HttpError(404, "NOT_FOUND", "The requested resource was not found"));
