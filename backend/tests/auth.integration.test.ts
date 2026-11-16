@@ -4,7 +4,6 @@ import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import test from "node:test";
 import { createApp } from "../src/app.js";
-import { withTenantTransaction } from "../src/common/authorization/tenant-transaction.js";
 import { createLogger } from "../src/common/logging/logger.js";
 import { runMigrations } from "../src/database/migrations/runner.js";
 import { isRoleAllowed } from "../src/modules/auth/auth-middleware.js";
@@ -72,16 +71,6 @@ test("owner registration, login, role context, tenant isolation and logout", { s
       body: JSON.stringify({ dairyName: "South Field Dairy", displayName: "Second Owner", email: secondEmail, password }),
     });
     assert.equal(secondRegistration.status, 201);
-
-    const visibleDairies = await withTenantTransaction(
-      pool,
-      { dairyId: registration.dairy.id, userId: registration.user.id },
-      (client) => client.query<{ id: string }>("SELECT id FROM public.dairies ORDER BY id"),
-    );
-    assert.deepEqual(visibleDairies.rows.map((row) => row.id), [registration.dairy.id]);
-
-    const unscoped = await pool.query<{ id: string }>("SELECT id FROM public.dairies");
-    assert.equal(unscoped.rows.length, 0);
 
     assert.equal(isRoleAllowed("OWNER", ["OWNER", "MANAGER"]), true);
     assert.equal(isRoleAllowed("SELLER", ["OWNER", "MANAGER"]), false);

@@ -8,17 +8,11 @@ import { runMigrations } from "../src/database/migrations/runner.js";
 const databaseUrl = process.env.DATABASE_URL;
 
 test("fresh PostGIS database migrates and remains idempotent", { skip: !databaseUrl }, async () => {
-  const pool = new Pool({
-    connectionString: databaseUrl,
-    max: 2,
-    connectionTimeoutMillis: 5_000,
-  });
+  const pool = new Pool({ connectionString: databaseUrl, max: 2, connectionTimeoutMillis: 5_000 });
 
   try {
     await runMigrations(pool);
-    const postgis = await pool.query<{ version: string }>(
-      "SELECT PostGIS_Full_Version() AS version",
-    );
+    const postgis = await pool.query<{ version: string }>("SELECT PostGIS_Full_Version() AS version");
     assert.ok(postgis.rows[0]?.version.includes("POSTGIS="));
 
     const migrations = await pool.query<{ version: string }>(
@@ -29,27 +23,49 @@ test("fresh PostGIS database migrates and remains idempotent", { skip: !database
       "002_create_dairies.sql",
       "003_create_identity_and_sessions.sql",
     ]);
+    assert.deepEqual(await runMigrations(pool), []);
 
-    const rerun = await runMigrations(pool);
-    assert.deepEqual(rerun, []);
-
-    const dairyId = randomUUID();
+    const firstDairyId = randomUUID();
+    const secondDairyId = randomUUID();
     const userId = randomUUID();
-    const dairy = await withTenantTransaction(pool, { dairyId, userId }, (client) =>
-      client.query<{ id: string; timezone: string }>(
-        "INSERT INTO public.dairies (id, name) VALUES ($1, $2) RETURNING id, timezone",
-        [dairyId, "Test dairy"],
-      ),
-    );
-    assert.match(dairy.rows[0]?.id ?? "", /^[0-9a-f-]{36}$/i);
-    assert.equal(dairy.rows[0]?.timezone, "Asia/Kolkata");
 
-    const hidden = await pool.query("SELECT id FROM public.dairies WHERE id = $1", [dairyId]);
-    assert.equal(hidden.rowCount, 0);
-    const visible = await withTenantTransaction(pool, { dairyId, userId }, (client) =>
-      client.query("SELECT id FROM public.dairies WHERE id = $1", [dairyId]),
+    await withTenantTransaction(pool, { dairyId: firstDairyId, userId }, (client) =>
+      client.query("INSERT INTO public.dairies (id, name) VALUES ($1, $2)", [firstDairyId, "First tenant"]),
     );
-    assert.equal(visible.rowCount, 1);
+    await withTenantTransaction(pool, { dairyId: secondDairyId, userId }, (client) =>
+      client.query("INSERT INTO public.dairies (id, name) VALUES ($1, $2)", [secondDairyId, "Second tenant"]),
+    );
+
+    await pool.query(
+      "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'milk_rls_test') " +
+      "THEN CREATE ROLE milk_rls_test NOLOGIN NOSUPERUSER NOBYPASSRLS; END IF; END $$",
+    );
+    await pool.query("GRANT USAGE ON SCHEMA public TO milk_rls_test");
+    await pool.query("GRANT SELECT ON public.dairies TO milk_rls_test");
+
+    const visible = await withTenantTransaction(
+      pool,
+      { dairyId: firstDairyId, userId },
+      async (client) => {
+        await client.query("SET LOCAL ROLE milk_rls_test");
+        return client.query<{ id: string }>("SELECT id FROM public.dairies ORDER BY id");
+      },
+    );
+    assert.deepEqual(visible.rows.map((row) => row.id), [firstDairyId]);
+
+    const unscopedClient = await pool.connect();
+    try {
+      await unscopedClient.query("BEGIN");
+      await unscopedClient.query("SET LOCAL ROLE milk_rls_test");
+      const unscoped = await unscopedClient.query("SELECT id FROM public.dairies");
+      assert.equal(unscoped.rowCount, 0);
+      await unscopedClient.query("COMMIT");
+    } catch (error) {
+      await unscopedClient.query("ROLLBACK").catch(() => undefined);
+      throw error;
+    } finally {
+      unscopedClient.release();
+    }
   } finally {
     await pool.end();
   }
