@@ -246,13 +246,13 @@ Use deny-by-default authorization. Check both role and ownership of the specific
 
 ## 8. Authentication model
 
-No public self-registration in the initial dairy pilot.
+No public self-registration in the initial dairy pilot. The development-only owner registration endpoint is disabled by default in production; keep it disabled until verified onboarding and abuse controls are ready.
 
 - Owner account: provisioned securely during setup; strong password or verified phone login.
 - Driver account: created/activated by owner; driver gets an individual credential.
 - Seller account: activated by owner using seller code and an owner-issued one-time activation secret/PIN. Store only a salted password hash; never store a reusable plaintext PIN.
-- Access token: short-lived.
-- Refresh token: rotate on use, store hashed server-side, revoke on logout/device removal.
+- Current foundation: 256-bit opaque bearer session token, SHA-256 hash at rest, 30-day expiry and server-side logout revocation.
+- Production follow-up: short-lived access token plus rotating refresh token, reuse detection and device/session management. The current token is not yet a rotating refresh-token lifecycle.
 - Rate limit login, seller activation, PIN reset and refresh endpoints.
 - Never place long-lived secrets in Android source code or the Git repository.
 

@@ -70,26 +70,26 @@
 ## Step 4 — Identity, login, roles and dairy-level security
 
 **Build**
-- Define owner, driver and seller identities and role permissions.
-- Implement login, short-lived access token, rotating refresh token, logout and session revocation.
-- Create owner-provisioned driver and seller activation flows.
+- Define global user identity, dairy memberships and owner/manager/driver/seller role permissions.
+- Implement the first owner registration/login, current-identity and logout/session-revocation foundation; use opaque hashed bearer sessions.
+- Keep self-registration development-only; production defaults to disabled until verified onboarding and abuse controls are implemented.
+- Add owner-provisioned driver and seller activation after Step 5 master-data records exist.
 - Seller code plus a secure activation PIN/secret; seller code by itself is never accepted as a password.
-- Hash passwords/PINs and refresh tokens; add rate limits and account lockout/backoff.
+- Hash passwords with Argon2id and session tokens at rest; add distributed rate limits, account lockout/backoff, OTP verification and refresh-token rotation as production hardening.
 - Add dairy_id tenancy to business data and a centralized authorization guard.
 - Enforce resource ownership on every endpoint; introduce PostgreSQL RLS only with correctly scoped transaction-local tenant context and non-bypass application DB roles.
 
 **Files**
 - backend/src/modules/auth, users, dairies.
 - backend/src/common/authorization and middleware.
-- SQL migrations for users, dairy, refresh_sessions and tenant constraints.
+- SQL migrations for users, dairy memberships, revocable auth_sessions and tenant constraints.
 - android/shared/core-auth.
 
 **Acceptance**
-- Owner A cannot read Owner B's dairy.
-- Driver cannot access a different vehicle or another driver's route.
-- Seller cannot access another seller or arbitrary vehicle by changing an ID.
-- Reused/expired/revoked refresh tokens fail.
-- Login/activation brute-force attempts are throttled.
+- Owner A cannot read Owner B's dairy; forced RLS hides tenant rows without the transaction-local dairy context.
+- Authentication checks user status, active membership, token expiry and revocation.
+- Role gates deny by default; object/assignment authorization is added alongside Steps 5, 11, 13 and 14.
+- Refresh-token rotation/reuse detection and distributed brute-force throttling are production hardening tracked in Step 18.
 
 ## Step 5 — Owner master data: dairy, depot, sellers, drivers and vehicles
 

@@ -62,6 +62,6 @@ The migrations enable PostGIS, create the dairy tenant root, then create users, 
 
 ## Production hardening still required
 
-Before public onboarding, add distributed login/register rate limits, verified-email or phone-OTP workflows, password reset, audit events, and a dedicated non-owner database role with least-privilege grants. The current 30-day bearer session is a revocable session foundation, not a complete high-assurance refresh-token lifecycle.
+Before public onboarding, add distributed login/register rate limits, verified-email or phone-OTP workflows, password reset, audit events, and a dedicated non-owner database role with least-privilege grants. Keep owner self-registration disabled in production until those controls and a real onboarding/verification process are in place. The current 30-day bearer session is a revocable session foundation, not a complete high-assurance refresh-token lifecycle.
 
 Production must use TLS for PostgreSQL and a dedicated least-privilege database role.

@@ -45,6 +45,15 @@ Authentication proves the current identity and active membership. Authorization 
 - Role authorization helper and tenant transaction context.
 - Integration tests for auth lifecycle, duplicate registration, role decisions and cross-dairy RLS isolation.
 
+## Production registration guard
+
+Owner self-registration is a development convenience only. The API enables it by default only when NODE_ENV=development; production defaults to a hidden 404 route unless OWNER_SELF_REGISTRATION_ENABLED=true is explicitly set. The example .env and Docker Compose configuration enable it for local development. Do not enable it for a public pilot until verified onboarding and distributed abuse controls are ready.
+
+## Final CI verification
+
+- Backend CI: https://github.com/jayDevCodes/Milk/actions/runs/43804419638 — passed. Strict type-check, fresh PostgreSQL 18.7/PostGIS 3.7 migrations, all 9 tests (0 failures), production TypeScript build, compiled migration idempotency and production readiness smoke test passed.
+- Repository guardrails: https://github.com/jayDevCodes/Milk/actions/runs/43804419775 — passed.
+
 ## Explicit follow-up hardening
 
 Before public production onboarding, add distributed login/register rate limits, verified-email or phone-OTP workflows, password reset, short-lived access plus rotating refresh tokens if the threat model requires them, audit events, and a dedicated non-owner database role. Do not claim these are implemented by this milestone.
