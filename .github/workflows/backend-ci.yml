@@ -57,15 +57,8 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 26.13.1
-
-      - name: Generate npm lockfile from exact direct dependency pins
-        working-directory: backend
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-
-      - name: Capture lockfile for repository pinning
-        working-directory: backend
-        run: |
-          node --input-type=module -e 'import { readFileSync } from "node:fs"; console.log("MILK_LOCKFILE_JSON_START"); console.log(readFileSync("package-lock.json", "utf8")); console.log("MILK_LOCKFILE_JSON_END");'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install locked dependencies
         working-directory: backend
