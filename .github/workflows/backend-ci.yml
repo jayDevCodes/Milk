@@ -1,0 +1,113 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "infra/**"
+      - ".github/workflows/backend-ci.yml"
+      - "docs/TECH_STACK_DECISIONS.md"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "infra/**"
+      - ".github/workflows/backend-ci.yml"
+      - "docs/TECH_STACK_DECISIONS.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgis/postgis:18-3.7
+        env:
+          POSTGRES_DB: milk_test
+          POSTGRES_USER: milk
+          POSTGRES_PASSWORD: milk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U milk -d milk_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://milk:milk_test@127.0.0.1:5432/milk_test
+      DATABASE_SSL: "false"
+      DB_POOL_MAX: "5"
+      LOG_LEVEL: silent
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 26.13.1
+
+      - name: Generate npm lockfile from exact direct dependency pins
+        working-directory: backend
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Capture lockfile for repository pinning
+        working-directory: backend
+        run: |
+          node --input-type=module -e 'import { readFileSync } from "node:fs"; import { gzipSync } from "node:zlib"; console.log("MILK_LOCKFILE_GZIP_BASE64_START"); console.log(gzipSync(readFileSync("package-lock.json")).toString("base64")); console.log("MILK_LOCKFILE_GZIP_BASE64_END");'
+
+      - name: Install locked dependencies
+        working-directory: backend
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Type-check backend
+        working-directory: backend
+        run: npm run typecheck
+
+      - name: Apply fresh-database migrations
+        working-directory: backend
+        run: npm run db:migrate
+
+      - name: Run unit and PostGIS integration tests
+        working-directory: backend
+        run: npm test
+
+      - name: Build production JavaScript
+        working-directory: backend
+        run: npm run build
+
+      - name: Verify compiled migration runner is repeatable
+        working-directory: backend
+        run: npm run db:migrate:prod
+
+      - name: Smoke-test production server and database readiness
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          npm run start > /tmp/milk-api.log 2>&1 &
+          server_pid=$!
+          cleanup() {
+            kill "$server_pid" 2>/dev/null || true
+            wait "$server_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/health/ready; then
+              printf "\\nProduction readiness endpoint passed.\\n"
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/milk-api.log
+          exit 1

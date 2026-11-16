@@ -1,7 +1,7 @@
 # Milk — Technology Stack Research & Decisions
 
-**Research date:** 15 November 2026  
-**Scope:** Next foundation milestones: Step 2 (Android monorepo) and Step 3 (backend/database).  
+**Research date:** 16 November 2026  
+**Scope:** Android baseline plus Step 3 backend/database foundation. Version pins were rechecked against official release pages on 16 November 2026.  
 **Selection rule:** Choose maintained stable releases that fit this product. Do not use preview/RC builds in production merely because they are newer.
 
 ## 1. Recommended stack
@@ -41,13 +41,13 @@ Each app owns its navigation graph, permissions and role-specific screens. Share
 
 | Layer | Selection | Why it fits Milk |
 |---|---|---|
-| Runtime | Node.js 26 LTS line | Production LTS; Node 25 is EOL |
-| Language | TypeScript, strict mode | Safer service and API contracts |
+| Runtime | Node.js 26.13.1 LTS | Current Node 26 LTS patch line; Node 25 is EOL |
+| Language | TypeScript 7.0.2, strict mode | Current stable npm release; strict compile and runtime validation are both enabled |
 | HTTP | Express 5.3.0 | User already knows Node/Express; no need to learn a new backend framework |
 | Validation | Zod 4.6.7 | Runtime validation of every untrusted path/query/body |
-| Logging | Pino | Structured logs with redaction for secrets/location data |
-| Database driver | node-postgres (pg) | Direct SQL, pooling and transaction control |
-| Schema changes | Versioned SQL migrations | Reproducible database setup |
+| Logging | Pino 10.4.0 | Structured logs with redaction for secrets; request logs omit bodies and query strings |
+| Database driver | node-postgres (pg) 8.23.1 | Current release line supports Node 26, direct SQL, pooling and transaction control |
+| Schema changes | Forward-only SQL migrations with SHA-256 checksums and PostgreSQL advisory locking | Reproducible migrations, drift detection and concurrent-run protection |
 | Geospatial | PostgreSQL 18.7 + PostGIS 3.7.0 | Spatial points, distances, GiST indexes and route/location queries |
 | Realtime | Node ws server over WSS | Standard WebSocket event transport; server-authorized subscriptions |
 | API contract | OpenAPI 3.x | Keeps all three apps aligned with backend endpoints |
@@ -74,13 +74,13 @@ Use a modular monolith, not microservices. Use pg with parameterized SQL and exp
 | Activity Compose | 1.13.0 | Stable |
 | Dagger Hilt | 2.60.1 | Version shown in current official setup guide |
 | kotlinx.serialization | 1.13.0 | Stable release dated 10 November 2026 |
-| Node.js | 26 LTS | Production LTS; avoid Node 25 EOL |
-| Express | 5.3.0 | Current Express 5 release found |
-| Zod | 4.6.7 | Current Zod 4 release found |
-| PostgreSQL | 18.7 | Stable release dated 12 November 2026 |
-| PostGIS | 3.7.0 | Stable release dated 30 October 2026 |
+| Node.js | 26.13.1 | Current Node 26 LTS patch as of 16 November 2026 |
+| Express | 5.3.0 | Current Express 5 release; Express 5 supports Node 18+ |
+| Zod | 4.6.7 | Current Zod 4 release |
+| PostgreSQL | 18.7 | Supported stable release dated 12 November 2026 |
+| PostGIS | 3.7.0 | Stable 3.7 release; official postgis/postgis:18-3.7 image is compatible with PostgreSQL 18 |
 
-This is a dated baseline, not a reason to upgrade dependencies blindly on every build. Pin exact versions in Gradle version catalogs and package-lock.json. Avoid dynamic plugin versions, latest tags and unpinned Docker images.
+This is a dated baseline, not a reason to upgrade dependencies blindly on every build. Pin exact npm direct dependencies and commit the generated package-lock.json after first CI dependency resolution; pin Gradle versions and avoid dynamic plugin versions, latest Docker tags and unpinned actions.
 
 ## 3. Important Android build decision: AGP 9 compatibility
 
@@ -282,3 +282,30 @@ Do not add Kubernetes, microservices, Kafka, Redis cluster, GraphQL, MongoDB, Fi
 - PostGIS ST_DWithin: https://postgis.net/docs/ST_DWithin.html
 
 Recheck versions and billing before locking dependencies for the actual Step 2/3 build.
+
+
+## 13. Step 3 backend foundation implementation (16 November 2026)
+
+The initial backend uses a TypeScript 7 strict ESM project with Node.js 26.13.1 LTS, Express 5.3.0, Zod 4.6.7, Pino 10.4.0 and node-postgres 8.23.1. No ORM is added: explicit parameterized SQL is retained for PostGIS operations and route/trip transactions.
+
+Operational choices:
+- The modular monolith has one API process and one PostgreSQL/PostGIS database.
+- A bounded pg pool uses connection and statement timeouts; production connections must use TLS.
+- Liveness (GET /health) checks the process only. Readiness (GET /health/ready) performs a real PostGIS query and returns 503 when the database is missing or unavailable.
+- Request IDs are validated or generated and returned in the response header. Request logs include method/path/status/duration only; no body, query string or precise location data is logged.
+- Pino redacts authorization, cookies, passwords, PINs and token fields.
+- SQL migrations are forward-only, each runs in a transaction, and SHA-256 checksums reject edits to applied migrations. A PostgreSQL advisory lock prevents simultaneous migration runners.
+- The first migrations enable PostGIS and create the dairy tenant root. Identity/session/role tables are kept for Step 4; sellers/drivers/vehicles/assignments remain in Step 5.
+- The PostGIS Docker image for PostgreSQL 18 uses the volume path /var/lib/postgresql (not the older /var/lib/postgresql/data path). The current upstream image metadata lists amd64 support; Compose explicitly uses linux/amd64, so Apple Silicon development runs that database image through Docker's x86 emulation.
+
+### Official backend references checked 16 November 2026
+- Node.js 26 LTS release status and current downloads: https://nodejs.org/en/about/previous-releases and https://nodejs.org/en/download/
+- Node environment-file CLI support: https://nodejs.org/dist/latest/docs/api/cli.html
+- Express 5 API and supported Node line: https://expressjs.com/en/api/ and https://expressjs.com/en/support/
+- Express 5.3.0 release: https://github.com/expressjs/express/releases
+- TypeScript 7.0.2 npm release: https://www.npmjs.com/package/typescript
+- Zod 4.6.7 release: https://github.com/colinhacks/zod/releases
+- Pino 10.4.0 release line: https://www.npmjs.com/package/pino
+- node-postgres 8.23.1 release and Node 26 support: https://www.npmjs.com/package/pg and https://github.com/brianc/node-postgres/blob/master/CHANGELOG.md
+- PostgreSQL 18.7 release and support policy: https://www.postgresql.org/about/news/postgresql-187-1712-1616-1520-1425-and-19-rc-2-released/ and https://www.postgresql.org/support/versioning/
+- PostGIS 18-3.7 image compatibility and PostgreSQL 18 data-volume path: https://hub.docker.com/r/postgis/postgis/

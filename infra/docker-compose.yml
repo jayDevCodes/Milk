@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgis/postgis:18-3.7
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-milk}
+      POSTGRES_USER: ${POSTGRES_USER:-milk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-milk_dev_only}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - milk-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-milk} -d ${POSTGRES_DB:-milk}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  api:
+    image: node:26.13.1-bookworm-slim
+    working_dir: /workspace/backend
+    init: true
+    command: >-
+      sh -c "npm install --no-audit --no-fund &&
+      npm run db:migrate &&
+      npm run dev"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 3000
+      LOG_LEVEL: debug
+      DATABASE_URL: postgresql://${POSTGRES_USER:-milk}:${POSTGRES_PASSWORD:-milk_dev_only}@db:5432/${POSTGRES_DB:-milk}
+      DATABASE_SSL: "false"
+      DB_POOL_MAX: 10
+    ports:
+      - "${API_PORT:-3000}:3000"
+    volumes:
+      - ../backend:/workspace/backend
+      - milk-backend-node-modules:/workspace/backend/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  milk-postgres-data:
+  milk-backend-node-modules:

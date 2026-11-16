@@ -8,7 +8,7 @@ Execution: Continue runs Research → Build → Verify → Commit for the first 
 |---:|---|---|---|
 | 01 | Repository foundation and engineering rules | PARTIAL | Hygiene/configuration, contribution/security docs and pipeline state committed. Repository guardrail workflow passed on commit 00057a0. Maintainer still needs to confirm GitHub security settings (Dependabot alerts, secret scanning, push protection, code scanning). |
 | 02 | Android monorepo and three app shells | COMPLETE | CI run [43796684275](https://github.com/jayDevCodes/Milk/actions/runs/43796684275) passed on commit 6e125a8: all three debug APK tasks and `:core:app-shell:testDebugUnitTest` succeeded. Research and two prior CI root-cause fixes are recorded in docs/research/step-02-android-monorepo-and-shells.md. Physical MapLibre/offline rendering and representative handset/minSdk compatibility checks are moved to Step 18. |
-| 03 | Backend and database foundation | PENDING | TypeScript API, PostgreSQL/PostGIS and fresh-database migrations verified |
+| 03 | Backend and database foundation | IN PROGRESS | TypeScript/Express API, Zod configuration, Pino request logging/redaction, pg pool, liveness/readiness endpoints, PostGIS migrations, Compose stack and backend CI are being added. Fresh-database CI verification is pending. |
 | 04 | Authentication, roles and tenant security | PENDING | Auth and cross-dairy authorization tests pass |
 | 05 | Dairy master data and assignments | PENDING | Dairy, depot, seller, driver, vehicle and assignment flows verified |
 | 06 | Route domain and immutable versions | PENDING | Versioned routes and immutable published snapshots verified |

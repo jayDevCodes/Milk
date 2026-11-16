@@ -49,6 +49,9 @@ cd android
 
 The first map screen is a **local renderer/lifecycle preview**, not a populated regional offline map pack. PMTiles and Valhalla data are intentionally not committed to Git.
 
+## Backend workspace
+The TypeScript API is under `backend/` and runs as one Express modular monolith. PostgreSQL 18 + PostGIS 3.7 and the API are available through `infra/docker-compose.yml`. Start local development with `cp .env.example .env` followed by `docker compose --env-file .env -f infra/docker-compose.yml up`. The API exposes `GET /health` for process liveness and `GET /health/ready` for PostgreSQL/PostGIS readiness. See [backend setup](backend/README.md).
+
 ## Core product rules
 - A driver saves a route once. The published route is restored after login/app restart until the driver explicitly edits and publishes a new version.
 - Every trip is pinned to an immutable route version.
@@ -59,7 +62,7 @@ The first map screen is a **local renderer/lifecycle preview**, not a populated 
 - Every business record is scoped to a dairy; authorization is checked for each resource and action.
 
 ## Current status
-Repository foundations and the first Android app shells are committed. GitHub Actions repository guardrails passed. Android CI is now being added; there is no live backend, production credential, real seller data, regional PMTiles package or Valhalla graph yet.
+Repository foundations and all three Android app shells are committed and CI-verified. The initial TypeScript backend and PostgreSQL/PostGIS migration foundation are now being built and verified. There is no production deployment, production credential, real seller data, regional PMTiles package or Valhalla graph yet.
 
 ## Development policy
 - Never commit API keys, signing keys, service-account files, production tokens or real seller personal data.
