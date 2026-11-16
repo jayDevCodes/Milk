@@ -381,3 +381,14 @@ Current findings to carry into future research:
 - Newer interactive two-stage transition APIs may enable gesture-driven effects; use only if the selected Compose version is stable and the UX benefits the workflow.
 - Compose's own guidance recommends avoiding unnecessary layout work during animation; prefer draw/graphics-layer updates where appropriate.
 - Android documents Baseline Profiles as capable of improving code execution speed by about 30% for covered journeys; benchmark Milk's own flows before making any performance claim.
+
+
+## Autonomous execution contract (2026-11-16)
+
+A normal **Continue / Next** command executes one complete milestone: inspect live GitHub state; research current official documentation; save a step-specific research note; implement that same step; run available checks; update docs/PIPELINE_STATE.md; and commit the work. Do not stop between Research and Build to request another prompt.
+
+Use **Status** for a read-only reconciliation. Use **Research step N** only when research without implementation is explicitly requested. A normal Continue never requires a separate Build message.
+
+Mark work COMPLETE only when acceptance criteria have evidence from committed files and executed checks. Mark PARTIAL when CI, external settings, integration, or physical-device validation is pending. Never claim that a remote workflow or device test passed unless its actual result was inspected. Never invent credentials or make production deployments, purchases, force pushes, or destructive migrations without explicit authorization.
+
+If a step depends on unavailable credentials, local device execution, or an owner-only external action, finish all safe independent work, record the exact blocker and continue only with non-dependent work. The 20-step roadmap remains authoritative; do not skip its dependency order.

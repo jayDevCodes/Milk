@@ -1,47 +1,32 @@
-# Milk — Pipeline State
+# Milk pipeline state
 
-**Last reconciled:** 2026-11-15  
-**Repository:** [jayDevCodes/Milk](https://github.com/jayDevCodes/Milk)  
-**Branch:** main  
-**Mode:** One Continue command executes Research → Build → Verify → Commit for the first incomplete step.
-
-## Current checkpoint
-
-**Step 01 — PARTIAL.** Repository foundations are committed and CI run [#1](https://github.com/jayDevCodes/Milk/actions/runs/43740459888) passed. The maintainer still needs to check GitHub security settings in Settings → Security and analysis.
-
-**Step 02 — PARTIAL.** The Gradle monorepo, three role APK modules, shared Compose design/navigation/map libraries and Android CI are committed. Android CI, physical-device MapLibre testing and the minSdk decision remain to be verified.
-
-## Milestone register
+Last reconciled: 2026-11-16  
+Default branch: main  
+Execution: one Continue command runs Research → Build → Verify → Commit for one complete milestone.
 
 | Step | Milestone | Status | Exit evidence |
 |---:|---|---|---|
-| 01 | Repository foundation and engineering rules | PARTIAL | Root guardrails CI passed; GitHub security settings owner check remains |
-| 02 | Android monorepo and three app shells | PARTIAL | Three app modules, shared shells, local MapLibre style and Android CI committed; CI/device verification pending |
-| 03 | Backend and database foundation | PENDING | Strict TypeScript API, validated environment, Postgres/PostGIS and clean migrations |
-| 04 | Authentication, roles and tenant security | PENDING | Owner/driver/seller auth and cross-dairy authorization tests pass |
-| 05 | Dairy master data and assignments | PENDING | Master data flows and server-side 15 km seller rule |
-| 06 | Route domain and immutable versions | PENDING | Versioned routes and immutable published snapshots |
-| 07 | Driver route builder | PENDING | Create, reorder, validate and save draft route |
-| 08 | Route calculation and optimization | PENDING | Private regional routing, fixed depot endpoints and stop mapping |
-| 09 | Manual segment shaping and route preview | PENDING | Via-points without mutating seller stop records |
-| 10 | Saved route restoration and offline route cache | PENDING | Route restores after restart and offline cache remains consistent |
-| 11 | Trip lifecycle and pickup operations | PENDING | Durable, idempotent trip/pickup transitions |
-| 12 | Driver GPS service and offline queue | PENDING | Visible active-trip service and retry/privacy/battery tests |
-| 13 | Live tracking backend and realtime delivery | PENDING | Authenticated WSS, reconnect/resync and tenant-isolation tests |
-| 14 | Seller live tracking and compass map | PENDING | Seller sees only assigned vehicle and own pickup context |
-| 15 | Remaining-stop count, ETA and notifications | PENDING | Correct count/ETA and clear stale/offline state |
-| 16 | Owner fleet dashboard | PENDING | Role-safe live fleet map and progress controls |
-| 17 | History, reports, audit and owner operations | PENDING | Trip history, reports and audit trails |
-| 18 | Security, reliability and end-to-end testing | PENDING | Threat model, recovery, offline/GPS and device checks |
-| 19 | CI/CD, backend deployment and APK distribution | PENDING | Deployment, signed artifacts, backups and monitoring verified |
-| 20 | Real dairy pilot and launch | PENDING | Field validation and accepted accuracy/privacy/battery thresholds |
+| 01 | Repository foundation and engineering rules | IN PROGRESS | Root hygiene, contribution/security docs, CI and state tracking committed; CI and repository security settings still require verification |
+| 02 | Android monorepo and three app shells | PENDING | Three installable Compose app shells and shared foundations build |
+| 03 | Backend and database foundation | PENDING | TypeScript API, PostgreSQL/PostGIS and migrations verified |
+| 04 | Authentication, roles and tenant security | PENDING | Auth and cross-dairy authorization tests pass |
+| 05 | Dairy master data and assignments | PENDING | Dairy, depot, seller, driver, vehicle and assignment flows verified |
+| 06 | Route domain and immutable versions | PENDING | Versioned routes and immutable published snapshots verified |
+| 07 | Driver route builder | PENDING | Draft route creation, reordering and validation work |
+| 08 | Route calculation and optimization | PENDING | Regional routing and fixed depot endpoints verified |
+| 09 | Manual segment shaping and route preview | PENDING | Via-points and route preview work without changing seller stops |
+| 10 | Saved route restoration and offline route cache | PENDING | Published route restores after restart/offline |
+| 11 | Trip lifecycle and pickup operations | PENDING | Durable, idempotent trip and pickup operations |
+| 12 | Driver GPS service and offline queue | PENDING | Active-trip location service, retry queue and privacy/battery checks |
+| 13 | Live tracking backend and realtime delivery | PENDING | Authenticated realtime fan-out, reconnect and tenant isolation |
+| 14 | Seller live tracking and compass map | PENDING | Seller sees assigned vehicle and own pickup context only |
+| 15 | Remaining stops, ETA and notifications | PENDING | Correct stop count/ETA and clear stale/offline state |
+| 16 | Owner fleet dashboard | PENDING | Owner fleet state and role-safe controls |
+| 17 | History, reports and audit | PENDING | Trip history, reports and audit trail |
+| 18 | Security, reliability and end-to-end tests | PENDING | Threat model, recovery, offline, GPS and device checks |
+| 19 | CI/CD, deployment and APK distribution | PENDING | Verified deployment, signed releases, backups and monitoring |
+| 20 | Real dairy pilot and launch | PENDING | Field routes, privacy, battery and incident thresholds accepted |
 
-## Status definitions
+Statuses: PENDING = no implementation evidence; IN PROGRESS = active work; PARTIAL = committed scope with checks outstanding; COMPLETE = every acceptance criterion verified; BLOCKED = required external dependency prevents safe progress.
 
-- **PENDING:** no implementation evidence.
-- **IN PROGRESS:** scoped implementation underway.
-- **PARTIAL:** files are committed, but acceptance checks remain.
-- **COMPLETE:** all criteria have evidence from committed files and executed checks.
-- **BLOCKED:** an external dependency, permission, credential or device test prevents safe completion.
-
-A commit does not prove a build. A CI pass does not replace physical-device tests. Record the exact check, date and link before marking a milestone complete.
+Never mark a milestone complete from documentation or a commit alone. Record actual command output, CI links, device validation and remaining owner-only actions.

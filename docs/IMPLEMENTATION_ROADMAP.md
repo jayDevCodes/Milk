@@ -482,3 +482,8 @@ A step is not complete merely because a screen exists. It must include:
 - Real trip and GPS: Steps 11–13.
 - Seller and owner product experience: Steps 14–17.
 - Production readiness: Steps 18–20.
+
+
+## Autonomous execution
+
+A single **Continue** command runs Research → Build → Verify → Commit for the first incomplete step. No separate Build prompt is needed. See [AI_DEVELOPMENT_PIPELINE.md](AI_DEVELOPMENT_PIPELINE.md) and [PIPELINE_STATE.md](PIPELINE_STATE.md).

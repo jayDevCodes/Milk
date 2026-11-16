@@ -66,3 +66,8 @@ Repository foundations and the first Android app shells are committed. GitHub Ac
 - Use environment templates with placeholders only.
 - Keep database changes in versioned migrations and API contracts documented/tested.
 - Keep generated APK/AAB, OSM extracts, PMTiles archives and Valhalla graphs out of normal source commits.
+
+
+## Autonomous development
+
+The roadmap follows a Research → Build → Verify → Commit cycle. Say **Continue** to execute the next incomplete milestone; research is saved before implementation, and Build starts automatically without another prompt. See [the pipeline](docs/AI_DEVELOPMENT_PIPELINE.md) and [live progress](docs/PIPELINE_STATE.md).
