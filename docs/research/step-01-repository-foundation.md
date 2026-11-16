@@ -1,44 +1,41 @@
-# Step 01 Research: Repository foundation and engineering rules
+# Step 01 Research and Build: Repository foundation
 
-- Date checked: 2026-11-15
+- Research checked: 2026-11-16
 - Repository: https://github.com/jayDevCodes/Milk
-- Starting commit: 0881c1695c1c50475cb5fbfff28435da778f52c8
+- Implementation commit: 00057a063f902efb7cc0f31ab004970bd37b1334
 
-## Live repository findings
+## Baseline discovered
 
-The root initially held only README.md and docs/. The docs folder contained architecture, technology decisions, roadmap, offline-map strategy and AI development pipeline. There was no source code, Android Gradle project, backend package manifest, ignore/editor policy, env template, ADR index, contribution/security guide or CI workflow.
+The live repository was not an empty documentation-only repository: it already contained three Android app modules, shared Compose app-shell/design/maps libraries, a MapLibre preview, Gradle configuration, a Step 2 research record and an Android CI workflow. This corrects the earlier stale pipeline checkpoint. Existing code was preserved.
 
-The README defines three separately installable apps and one shared backend. The architecture specifies application IDs and /api/v1. The previous pipeline required a second Build prompt after Research.
+## Research and decisions
 
-## Official GitHub guidance
+- Keep one monorepo for three separately installable role apps and one shared backend.
+- Add root ignore/editor/line-ending/environment-template conventions before introducing secrets or service configuration.
+- Keep generated APK/AAB, signing material, local environment files and large regional map archives out of normal Git history.
+- Keep GitHub Actions token permissions read-only and use immutable commit references for third-party actions.
+- Track progress in a versioned state file; docs alone do not prove implementation.
+- Use a lightweight repository guardrail script rather than adding another dependency before the Android/backend toolchains are stable.
+- Dependabot currently tracks GitHub Actions only. Add Gradle and npm ecosystems when backend and dependency manifests are present.
 
-- GitHub recommends checking Dependency graph, Dependabot alerts, secret scanning, push protection and code scanning. Their settings cannot be inferred from repository visibility: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-security-and-analysis-settings-for-your-repository
-- Dependabot version updates use .github/dependabot.yml with ecosystem, directory and schedule: https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/configure-version-updates
-- GitHub Actions secure-use guidance recommends full-length immutable action commit SHAs when workflow dependency lockfiles are not in use, and least-privilege permissions: https://docs.github.com/en/actions/reference/security/secure-use
-- actions/checkout v7.0.1 upstream commit was verified: https://github.com/actions/checkout/commit/3d3c42e5aac5ba805825da76410c181273ba90b1
+## Sources reviewed
 
-## Options and decisions
+- GitHub security and analysis settings: https://docs.github.com/en/code-security/getting-started/github-security-features
+- Dependabot version updates: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+- GitHub Actions secure use: https://docs.github.com/en/actions/reference/security/secure-use
+- actions/checkout v7.0.1 immutable release commit: https://github.com/actions/checkout/commit/3d3c42e5aac5ba805825da76410c181273ba90b1
 
-| Concern | Option A | Option B | Decision |
-|---|---|---|---|
-| Repository checks | Add external linter stack immediately | Small Bash script | Choose B until app/backend toolchains exist |
-| Dependency automation | Configure every ecosystem now | Actions now, Gradle/npm after manifests | Choose B |
-| Action references | Mutable tags | Verified full commit SHA | Choose SHA |
-| Token permissions | Broad defaults | Explicit contents: read | Choose least privilege |
-| Progress tracking | Chat-only | Versioned state file | Choose state file |
+## Build delivered
 
-## Implementation
+Commit 00057a063f902efb7cc0f31ab004970bd37b1334 added repository hygiene files, contributor/security guidance, autonomous pipeline instructions, ADRs and the pipeline state register.
 
-- Preserve the monorepo/three-app/shared-backend architecture.
-- Make Continue execute Research, Build, Verify and Commit for one step.
-- Add root ignore/editor/environment conventions.
-- Add contribution/security policy and three initial ADRs.
-- Add pipeline state and a research record.
-- Add a Bash repository guardrail and least-privilege GitHub Actions workflow.
-- Configure Dependabot for GitHub Actions only; add Gradle/npm when manifests exist.
+## Verification
 
-## Motion and limitations
+- Repository guardrails workflow for commit 00057a0: SUCCESS. https://github.com/jayDevCodes/Milk/actions/runs/43794466381
+- Shell guardrail job confirmed all required files and tracked assets checks passed.
+- GitHub Advanced Security feature toggles were not verifiable through the available repository API; maintainer confirmation remains required.
+- No local Android build or physical-device validation was executed in this step.
 
-No end-user motion is applicable to repository hygiene. UI motion will be researched during Step 2.
+## Acceptance
 
-No credentials, production data or real locations are introduced. GitHub security settings cannot be changed or confirmed via repository file commits and must be checked by the maintainer. CI outcome remains pending until GitHub runs the workflow. No Gradle/npm/Docker/device checks exist yet because the apps/backend are not scaffolded.
+Step 1 remains PARTIAL until the maintainer verifies repository security settings. The automated repository hygiene workflow is passing.
