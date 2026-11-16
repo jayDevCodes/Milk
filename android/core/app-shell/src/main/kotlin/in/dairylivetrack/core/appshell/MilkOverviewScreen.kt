@@ -1,4 +1,4 @@
-package in.dairylivetrack.core.appshell
+package `in`.dairylivetrack.core.appshell
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

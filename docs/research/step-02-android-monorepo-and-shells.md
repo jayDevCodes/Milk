@@ -31,11 +31,11 @@ Two initial Android CI runs were inspected by downloading the actual job logs:
 1. Run 43742506723 failed because the setup action received both SDK package names as one multiline package argument. That was corrected in commit 8e440de by moving package installation into an explicit shell step.
 2. Run 43742653560 then failed because the workflow requested platforms;android-37, which the SDK repository did not expose under that identifier. Android 17 is still a Preview/Canary SDK, and its platform package uses the versioned identifier platforms/android-37.0. The workflow now uses Google's recommended Android CLI with --canary for that platform and installs stable Build Tools 36.0.0 separately.
 
-A fresh CI run on this updated workflow is required before treating Android compilation and tests as verified.
+A fresh CI run on the updated SDK workflow reached Kotlin compilation and exposed another source issue: the Kotlin package root was named `in`, which is a hard Kotlin keyword. The package root is retained for the existing Android application IDs, but Kotlin package declarations and imports now escape it as `` `in` ``. Kotlin's language specification explicitly permits hard keywords as escaped identifiers.
 
 ## Verification status
 
-The three app modules, shared libraries, role test, Gradle configuration and MapLibre preview are committed. The earlier CI failures happened before Gradle was invoked, so they do not indicate an app-source compilation failure. This environment cannot run Gradle or Android emulators locally. The updated CI run must now verify all three APKs and the shared unit test.
+The three app modules, shared libraries, role test, Gradle configuration and MapLibre preview are committed. The earlier CI failures happened before Gradle was invoked, so they do not indicate an app-source compilation failure. This environment cannot run Gradle or Android emulators locally. The new CI run must now verify that the escaped package identifiers compile, all three APKs assemble, and the shared unit test passes.
 
 Real PMTiles display, offline pan/zoom, low-end GPU behaviour, foreground location and battery tests still require physical-device validation.
 
@@ -54,3 +54,4 @@ Real PMTiles display, offline pan/zoom, low-end GPU behaviour, foreground locati
 - Android Gradle Plugin 9.3 release notes: https://developer.android.com/build/releases/agp-9-3-0-release-notes
 - Kotlin Gradle Plugin compatibility table: https://kotlinlang.org/docs/gradle-configure-project.html
 - Android Actions setup: https://github.com/android-actions/setup-android
+- Kotlin escaped identifiers and hard-keyword rules: https://kotlinlang.org/spec/syntax-and-grammar.html

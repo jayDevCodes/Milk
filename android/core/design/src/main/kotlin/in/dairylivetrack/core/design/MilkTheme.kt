@@ -1,4 +1,4 @@
-package in.dairylivetrack.core.design
+package `in`.dairylivetrack.core.design
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography

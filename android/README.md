@@ -8,7 +8,7 @@
 | Seller | :apps:seller | in.dairylivetrack.seller |
 | Owner | :apps:owner | in.dairylivetrack.owner |
 
-These are three APKs sharing libraries and one future API, not three backends.
+These are three APKs sharing libraries and one future API, not three backends. The existing `in.dairylivetrack.*` application IDs remain unchanged; Kotlin source escapes the hard-keyword package segment as `` `in` ``.
 
 ## Pinned toolchain
 

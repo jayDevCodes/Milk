@@ -1,4 +1,4 @@
-package in.dairylivetrack.core.appshell
+package `in`.dairylivetrack.core.appshell
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

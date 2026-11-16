@@ -1,4 +1,4 @@
-package in.dairylivetrack.core.appshell
+package `in`.dairylivetrack.core.appshell
 
 enum class MilkRole(
     val title: String,

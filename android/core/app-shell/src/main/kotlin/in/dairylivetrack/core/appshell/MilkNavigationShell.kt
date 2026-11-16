@@ -1,4 +1,4 @@
-package in.dairylivetrack.core.appshell
+package `in`.dairylivetrack.core.appshell
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
